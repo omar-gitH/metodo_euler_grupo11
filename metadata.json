@@ -1,0 +1,6 @@
+{
+  "name": "Método de Euler - EDO",
+  "description": "Aplicación interactiva y didáctica para resolver Ecuaciones Diferenciales Ordinarias (EDO) mediante el Método de Euler, con KaTeX, mathjs, tablas de iteración, campos de pendientes y guía de ejercicios UTN.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

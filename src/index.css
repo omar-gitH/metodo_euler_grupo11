@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* =========================================================
+   Academic Typography & KaTeX Contrast Enhancement
+   ========================================================= */
+
+/* KaTeX inherits color from container by default */
+.katex {
+  color: inherit;
+  font-size: 1.05em;
+  text-rendering: optimizeLegibility;
+}
+
+.katex .mord,
+.katex .mbin,
+.katex .mrel,
+.katex .mopen,
+.katex .mclose,
+.katex .mpunct,
+.katex .minner {
+  color: inherit;
+}
+
+/* When inside any dark container or in dark mode, force white/light ink */
+.dark .katex,
+.dark .katex *,
+.text-white .katex,
+.text-white .katex *,
+.bg-slate-900 .katex,
+.bg-slate-900 .katex *,
+.bg-slate-950 .katex,
+.bg-slate-950 .katex *,
+.bg-indigo-950 .katex,
+.bg-indigo-950 .katex * {
+  color: #ffffff !important;
+}
+
+/* Light mode default ink outside dark containers */
+:not(.dark) :not(.text-white):not(.bg-slate-900):not(.bg-slate-950):not(.bg-indigo-950) > .katex,
+:not(.dark) :not(.text-white):not(.bg-slate-900):not(.bg-slate-950):not(.bg-indigo-950) > .katex * {
+  color: #090d16;
+}
+
+/* Hide scrollbar utility for horizontal scrollable navigation */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Academic Math Paper Box */
+.math-paper-box {
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+}
+
+.dark .math-paper-box {
+  background-color: #0f172a;
+  border-color: #334155;
+  box-shadow: none;
+}
+
+/* Smooth transitions */
+html {
+  transition: background-color 0.2s ease, color 0.2s ease;
+  scroll-behavior: smooth;
+}
