@@ -10,7 +10,13 @@ import { MathInline } from './components/MathView';
 import { GraduationCap, Sun, Moon } from 'lucide-react';
 
 export default function App() {
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('euler_theme') === 'dark';
+    } catch {
+      return false;
+    }
+  });
   const [activeSection, setActiveSection] = useState<string>('teoria');
   const [calculatorPreset, setCalculatorPreset] = useState<{
     fn: string;
@@ -86,61 +92,65 @@ export default function App() {
   return (
     <ThemeProvider isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode}>
       <div
-        className={`min-h-screen flex flex-col font-sans transition-colors duration-200 ${
+        className={`app-bg min-h-screen flex flex-col font-sans transition-colors duration-300 ${
           isDarkMode
-            ? 'bg-slate-950 text-slate-100 selection:bg-indigo-900 selection:text-indigo-200'
-            : 'bg-[#F8F9FA] text-gray-900 selection:bg-blue-100 selection:text-blue-900'
+            ? 'text-slate-100 selection:bg-indigo-500/40 selection:text-white'
+            : 'text-slate-900 selection:bg-indigo-100 selection:text-indigo-900'
         }`}
       >
-        {/* Cabecera Principal - Documento Técnico Riguroso */}
-        <header className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-colors">
-          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 py-8 sm:py-10">
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-              {/* Jerarquía de Documento Alineada a la Izquierda */}
-              <div className="space-y-3 text-left max-w-4xl">
-                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-semibold uppercase tracking-wider bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
-                  <GraduationCap className="w-4 h-4 shrink-0 text-blue-600 dark:text-blue-400" />
-                  <span>Cátedras de Modelos Numéricos y Cálculo Avanzado · UTN FRP</span>
-                </div>
+        {/* Cabecera principal */}
+        <header className="relative">
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 pt-6 sm:pt-10 pb-8 sm:pb-10">
+            <div className="surface px-5 py-6 sm:px-9 sm:py-9 relative overflow-hidden">
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -top-24 -right-16 w-72 h-72 rounded-full bg-gradient-to-br from-indigo-400/25 to-sky-300/20 blur-3xl"
+              />
+              <div className="relative flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+                <div className="space-y-4 text-left max-w-4xl">
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold tracking-wide bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/60">
+                    <GraduationCap className="w-4 h-4 shrink-0" />
+                    <span>Cátedra de Análisis Numérico | UTN FRLP</span>
+                  </div>
 
-                <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white">
-                  Método de Euler para Ecuaciones Diferenciales Ordinarias (EDO)
-                </h1>
+                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.1] text-slate-900 dark:text-white">
+                    Método de Euler para{' '}
+                    <span className="gradient-text">Ecuaciones Diferenciales Ordinarias</span>
+                  </h1>
 
-                <p className="text-gray-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
-                  Documento técnico interactivo para el estudio y resolución de <strong>Problemas de Valor Inicial (P.V.I)</strong> mediante aproximaciones de primer orden por recta tangente y análisis numérico de convergencia.
-                </p>
+                  <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed max-w-3xl">
+                    Documento técnico interactivo para el estudio y resolución de{' '}
+                    <strong className="text-slate-800 dark:text-white">Problemas de Valor Inicial (P.V.I)</strong> mediante
+                    aproximaciones de primer orden por recta tangente y análisis numérico de convergencia.
+                  </p>
 
-                {/* Fórmula compacta de documento */}
-                <div className="pt-1">
-                  <div className="inline-flex items-center gap-3 px-3.5 py-2 rounded-lg bg-gray-50 dark:bg-slate-800/80 border border-gray-200 dark:border-slate-700 text-xs sm:text-sm text-gray-800 dark:text-slate-200">
-                    <span className="font-mono text-gray-500 dark:text-slate-400 font-semibold text-xs">Esquema iterativo:</span>
+                  <div className="inline-flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 rounded-2xl bg-white/70 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/70 text-xs sm:text-sm text-slate-800 dark:text-slate-200 max-w-full overflow-x-auto no-scrollbar">
+                    <span className="font-mono text-slate-500 dark:text-slate-400 font-semibold text-xs">Esquema iterativo:</span>
                     <MathInline math="y_{n+1} = y_n + h \cdot f(x_n, y_n) \quad \text{con } y(x_0) = y_0" />
                   </div>
                 </div>
-              </div>
 
-              {/* Botón Toggle Limpio y Minimalista en la esquina superior derecha */}
-              <div className="flex items-center self-start md:self-auto shrink-0 pt-1">
-                <button
-                  onClick={() => setIsDarkMode((prev) => !prev)}
-                  type="button"
-                  aria-label={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border text-xs font-medium transition-all duration-150 cursor-pointer border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700 shadow-xs"
-                  title={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-                >
-                  {isDarkMode ? (
-                    <>
-                      <Sun className="w-3.5 h-3.5 text-amber-400" />
-                      <span>Modo Claro</span>
-                    </>
-                  ) : (
-                    <>
-                      <Moon className="w-3.5 h-3.5 text-gray-600" />
-                      <span>Modo Oscuro</span>
-                    </>
-                  )}
-                </button>
+                <div className="relative flex items-center self-start md:self-auto shrink-0">
+                  <button
+                    onClick={() => setIsDarkMode((prev) => !prev)}
+                    type="button"
+                    aria-label={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+                    className="btn-soft !px-4 !py-2.5 !text-xs"
+                    title={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+                  >
+                    {isDarkMode ? (
+                      <>
+                        <Sun className="w-4 h-4 text-amber-400" />
+                        <span>Modo claro</span>
+                      </>
+                    ) : (
+                      <>
+                        <Moon className="w-4 h-4 text-indigo-500" />
+                        <span>Modo oscuro</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -150,7 +160,7 @@ export default function App() {
         <HorizontalMenuBar activeSection={activeSection} onNavigate={scrollTo} />
 
         {/* Main Content Sections */}
-        <main className="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-10 py-10 space-y-16">
+        <main className="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-10 space-y-14 sm:space-y-20">
           {/* 1. Marco Teórico */}
           <Theory
             onGoToCalculator={() => scrollTo('calculadora')}
@@ -173,24 +183,24 @@ export default function App() {
         </main>
 
         {/* Academic Footer */}
-        <footer className="border-t border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-gray-600 dark:text-slate-400 py-10 px-4 sm:px-6 lg:px-8 mt-16 text-xs transition-colors">
+        <footer className="border-t border-slate-200/70 dark:border-slate-800/70 bg-white/50 dark:bg-slate-950/40 backdrop-blur-md text-slate-600 dark:text-slate-400 py-10 px-4 sm:px-6 lg:px-8 mt-16 text-xs transition-colors">
           <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="text-center md:text-left">
-              <p className="text-gray-900 dark:text-white font-bold text-sm">
+              <p className="text-slate-900 dark:text-white font-bold text-sm">
                 Método de Euler para Ecuaciones Diferenciales Ordinarias (EDO)
               </p>
-              <p className="text-gray-500 dark:text-slate-400 mt-0.5">
-                Cátedras de Modelos Numéricos y Cálculo Avanzado · UTN Facultad Regional La Plata
+              <p className="text-slate-500 dark:text-slate-400 mt-0.5">
+                Cátedra de Análisis Numérico | UTN FRLP
               </p>
             </div>
 
-            <div className="flex items-center gap-3 text-gray-500 dark:text-slate-400 flex-wrap justify-center">
+            <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 flex-wrap justify-center">
               <button
                 onClick={() => setIsDarkMode((prev) => !prev)}
-                className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer flex items-center gap-1.5 font-medium"
+                className="btn-soft"
               >
-                {isDarkMode ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-gray-600" />}
-                <span>{isDarkMode ? 'Tema Claro' : 'Tema Oscuro'}</span>
+                {isDarkMode ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-indigo-500" />}
+                <span>{isDarkMode ? 'Tema claro' : 'Tema oscuro'}</span>
               </button>
             </div>
           </div>

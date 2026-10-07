@@ -31,7 +31,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onNavigate }) => {
                 </span>
               </div>
               <p className="text-[11px] text-slate-600 dark:text-slate-400 hidden sm:block">
-                Cátedras de Modelos Numéricos y Cálculo Avanzado · UTN FRP
+                Cátedra de Análisis Numérico | UTN FRLP
               </p>
             </div>
           </div>

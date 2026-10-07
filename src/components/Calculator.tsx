@@ -243,86 +243,84 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
   const stepsToRender = result ? result.steps.slice(0, currentStepLimit + 1) : [];
 
   return (
-    <section id="calculadora" className="euler-calculator space-y-8 scroll-mt-20">
+    <section id="calculadora" className="euler-calculator space-y-8 scroll-mt-24">
       {/* Section Header */}
-      <div className="border-b border-slate-200 dark:border-slate-800 pb-5">
-        <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-400 font-bold text-xs tracking-wider uppercase mb-1">
-          <CalcIcon className="w-4 h-4" />
-          <span>Calculadora Interactiva</span>
+      <div className="pb-2">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase mb-3 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/60">
+          <CalcIcon className="w-3.5 h-3.5" />
+          <span>Calculadora interactiva</span>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-          Calculadora Resolvedora y Gráfico 2D
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+          Calculadora resolvedora y <span className="gradient-text">gráfico 2D</span>
         </h2>
-        <p className="text-slate-700 dark:text-slate-300 mt-2 text-base leading-relaxed max-w-4xl font-normal">
+        <p className="text-slate-600 dark:text-slate-300 mt-3 text-sm sm:text-base leading-relaxed max-w-4xl">
           Ingrese cualquier ecuación diferencial, modifique el paso <MathInline math="h" /> para analizar la convergencia
-          y visualice la curva generada punto a punto en el gráfico 2D interactivo.
+          y explore la curva generada punto a punto: podés <strong>acercar, alejar, mover y ampliar áreas</strong> del gráfico.
         </p>
       </div>
 
       {/* Quick Preload of Guide Exercises */}
-      <div className="bg-white dark:bg-slate-900 text-gray-900 dark:text-white rounded-lg p-5 sm:p-6 shadow-xs space-y-4 border border-gray-200 dark:border-slate-800">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-200 dark:border-slate-800 pb-3">
+      <div className="surface p-5 sm:p-6 space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <span className="text-xs font-semibold tracking-wider uppercase text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+            <span className="text-[11px] font-bold tracking-wider uppercase text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5" /> Guía Práctica UTN Facultad Regional La Plata
             </span>
-            <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mt-0.5">
-              Cargar Ejercicios de la Cátedra con un Clic
+            <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white mt-1">
+              Cargar ejercicios de la cátedra con un clic
             </h3>
           </div>
-          <span className="text-xs text-gray-500 dark:text-slate-400">
-            Preconfigurados para resolución inmediata:
-          </span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">Preconfigurados para resolución inmediata</span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {GUIDE_EXERCISES.slice(0, 3).map((ex) => (
-            <button
-              key={ex.id}
-              onClick={() => handleLoadExercise(ex)}
-              className={`text-left p-3.5 rounded-md border transition-all cursor-pointer flex flex-col justify-between ${
-                activeExerciseId === ex.id
-                  ? 'bg-blue-50/70 dark:bg-blue-950/60 border-blue-400 dark:border-blue-600 shadow-2xs'
-                  : 'bg-gray-50 dark:bg-slate-800/60 border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600'
-              }`}
-            >
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-bold text-blue-700 dark:text-blue-300">{ex.title.split(':')[0]}</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-white dark:bg-slate-700 text-gray-700 dark:text-slate-200 font-mono font-bold border border-gray-200 dark:border-slate-600">
-                    h = {ex.h}
-                  </span>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {GUIDE_EXERCISES.slice(0, 3).map((ex) => {
+            const active = activeExerciseId === ex.id;
+            return (
+              <button
+                key={ex.id}
+                onClick={() => handleLoadExercise(ex)}
+                aria-pressed={active}
+                className={`group text-left p-4 rounded-2xl border transition-all duration-300 cursor-pointer flex flex-col justify-between hover:-translate-y-0.5 ${
+                  active
+                    ? 'bg-gradient-to-br from-indigo-50 to-sky-50 dark:from-indigo-950/50 dark:to-sky-950/30 border-indigo-300 dark:border-indigo-700 shadow-md shadow-indigo-500/10'
+                    : 'bg-white/60 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-md'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">{ex.title.split(':')[0]}</span>
+                    <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-mono font-bold border border-slate-200 dark:border-slate-600">
+                      h = {ex.h}
+                    </span>
+                  </div>
+                  <div className="my-2 bg-white/80 dark:bg-slate-900/70 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 text-center overflow-x-auto no-scrollbar">
+                    <MathInline math={ex.displayLatex} />
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 mt-2">{ex.description}</p>
                 </div>
-                <div className="my-2 bg-white dark:bg-slate-900 p-2 rounded-md border border-gray-200 dark:border-slate-700 text-center">
-                  <MathInline math={ex.displayLatex} />
-                </div>
-                <p className="text-xs text-gray-600 dark:text-slate-300 line-clamp-2 mt-1">
-                  {ex.description}
-                </p>
-              </div>
 
-              <div className="mt-3 pt-2.5 border-t border-gray-200 dark:border-slate-700 flex items-center justify-between text-xs text-blue-600 dark:text-blue-400 font-semibold">
-                <span>Cargar en calculadora</span>
-                <span>→</span>
-              </div>
-            </button>
-          ))}
+                <div className="mt-3 pt-3 border-t border-slate-200/80 dark:border-slate-700/70 flex items-center justify-between text-xs text-indigo-600 dark:text-indigo-400 font-semibold">
+                  <span>Cargar en calculadora</span>
+                  <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Main Input Control Panel */}
-      <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6 sm:p-7 shadow-xs space-y-6">
+      <div className="surface p-5 sm:p-7 space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Left Column: Equation Inputs */}
           <div className="lg:col-span-7 space-y-5">
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor={fnInputId} className="block text-sm font-bold text-gray-900 dark:text-white">
+              <div className="flex flex-wrap items-center justify-between gap-1 mb-2">
+                <label htmlFor={fnInputId} className="block text-sm font-bold text-slate-900 dark:text-white">
                   Función diferencial <MathInline math="f(x, y) = y'" />
                 </label>
-                <span className="text-xs font-medium text-gray-500 dark:text-slate-400">
-                  Evaluable con mathjs
-                </span>
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Evaluable con mathjs</span>
               </div>
               <input
                 id={fnInputId}
@@ -330,12 +328,12 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                 value={fnInput}
                 onChange={(e) => setFnInput(e.target.value)}
                 placeholder="Ej: -y + x + 1  ó  sin(x) + exp(-x)"
-                className="w-full px-4 py-2.5 rounded-md border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono text-base text-gray-900 dark:text-white font-medium focus:border-blue-600 dark:focus:border-blue-400 focus:ring-1 focus:ring-blue-500 focus:outline-hidden transition-all shadow-2xs"
+                className="field text-base"
               />
 
               {/* Math helpers tokens */}
-              <div className="flex items-center flex-wrap gap-1.5 mt-2.5">
-                <span className="text-[11px] font-semibold text-gray-500 dark:text-slate-400 mr-1">Insertar símbolo:</span>
+              <div className="flex items-center flex-wrap gap-1.5 mt-3">
+                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mr-1">Insertar símbolo:</span>
                 {[
                   { label: 'e^(-x)', val: 'exp(-x)' },
                   { label: 'sen(x)', val: 'sin(x)' },
@@ -349,7 +347,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                     key={item.label}
                     type="button"
                     onClick={() => insertToken(item.val)}
-                    className="px-2.5 py-1 rounded-md text-xs bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-200 border border-gray-200 dark:border-slate-700 font-mono font-medium transition-all cursor-pointer shadow-2xs"
+                    className="btn-soft !font-mono !px-3 !py-1"
                   >
                     {item.label}
                   </button>
@@ -357,39 +355,41 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
               </div>
             </div>
 
-            {/* High-Contrast Formula Display Card */}
-            <div className="bg-gray-50 dark:bg-slate-800/60 rounded-md p-3.5 border border-gray-200 dark:border-slate-700 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            {/* Formula Display Card */}
+            <div className="rounded-2xl p-4 border border-indigo-100 dark:border-indigo-900/50 bg-gradient-to-r from-indigo-50/80 to-sky-50/60 dark:from-indigo-950/30 dark:to-sky-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400"></span>
-                <span className="text-xs font-semibold text-gray-600 dark:text-slate-400 uppercase tracking-wider">
-                  Fórmula a Resolver (Render KaTeX):
+                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+                <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                  Fórmula a resolver (KaTeX)
                 </span>
               </div>
-              <div className="font-bold text-gray-900 dark:text-white text-base bg-white dark:bg-slate-900 px-3 py-1 rounded-md border border-gray-200 dark:border-slate-700">
+              <div className="font-bold text-slate-900 dark:text-white text-base bg-white/90 dark:bg-slate-900/80 px-3.5 py-1.5 rounded-xl border border-slate-200/80 dark:border-slate-700 overflow-x-auto no-scrollbar max-w-full">
                 <MathInline math={`y' = f(x, y) = ${exprToLatex(fnInput || '0')}`} />
               </div>
             </div>
 
             {/* Optional Exact Solution */}
-            <div className="pt-1">
+            <div>
               <button
                 type="button"
                 onClick={() => setShowAdvancedExact(!showAdvancedExact)}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 cursor-pointer"
               >
                 {showAdvancedExact ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 <span>
-                  {showAdvancedExact ? 'Ocultar solución analítica exacta' : 'Añadir solución analítica exacta y(x) (opcional para comparar error)'}
+                  {showAdvancedExact
+                    ? 'Ocultar solución analítica exacta'
+                    : 'Añadir solución analítica exacta y(x) (opcional para comparar error)'}
                 </span>
               </button>
 
               {showAdvancedExact && (
-                <div className="mt-2.5 p-3.5 bg-blue-50/50 dark:bg-blue-950/30 rounded-md border border-blue-200 dark:border-blue-900/60 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label htmlFor={exactInputId} className="block text-xs font-bold text-gray-900 dark:text-slate-200">
+                <div className="mt-3 p-4 bg-emerald-50/60 dark:bg-emerald-950/20 rounded-2xl border border-emerald-100 dark:border-emerald-900/50 space-y-2">
+                  <div className="flex flex-wrap items-center justify-between gap-1">
+                    <label htmlFor={exactInputId} className="block text-xs font-bold text-slate-900 dark:text-slate-200">
                       Solución analítica exacta <MathInline math="y(x)" />:
                     </label>
-                    <span className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">
+                    <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium">
                       Permite computar error absoluto y relativo en cada paso
                     </span>
                   </div>
@@ -399,10 +399,10 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                     value={exactInput}
                     onChange={(e) => setExactInput(e.target.value)}
                     placeholder="Ej: x + exp(-x)"
-                    className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono text-sm text-gray-900 dark:text-white font-medium focus:ring-1 focus:ring-blue-500 focus:outline-hidden"
+                    className="field !text-sm"
                   />
                   {exactInput.trim() && (
-                    <div className="text-xs text-gray-800 dark:text-slate-300 pt-1 font-medium">
+                    <div className="text-xs text-slate-800 dark:text-slate-300 pt-1 font-medium overflow-x-auto no-scrollbar">
                       Vista previa analítica: <MathInline math={`y(x) = ${exprToLatex(exactInput)}`} />
                     </div>
                   )}
@@ -412,15 +412,15 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
           </div>
 
           {/* Right Column: Initial Conditions & Discretization */}
-          <div className="lg:col-span-5 bg-gray-50 dark:bg-slate-800/60 rounded-md p-5 border border-gray-200 dark:border-slate-700 space-y-4">
-            <h4 className="font-bold text-gray-900 dark:text-white text-sm border-b border-gray-200 dark:border-slate-700 pb-2">
-              Condición Inicial y Dominio de Trabajo
+          <div className="lg:col-span-5 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-700/70 bg-slate-50/70 dark:bg-slate-800/40 space-y-4">
+            <h4 className="font-extrabold text-slate-900 dark:text-white text-sm pb-2 border-b border-slate-200 dark:border-slate-700">
+              Condición inicial y dominio de trabajo
             </h4>
 
             {/* x0 and y0 */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3">
               <div>
-                <label htmlFor={x0InputId} className="block text-xs font-semibold text-gray-700 dark:text-slate-300 mb-1">
+                <label htmlFor={x0InputId} className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   Punto inicial <MathInline math="x_0" />
                 </label>
                 <input
@@ -429,11 +429,11 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                   step="any"
                   value={x0Input}
                   onChange={(e) => setX0Input(e.target.value)}
-                  className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono text-sm text-gray-900 dark:text-white font-semibold focus:ring-1 focus:ring-blue-500 focus:outline-hidden"
+                  className="field !text-sm"
                 />
               </div>
               <div>
-                <label htmlFor={y0InputId} className="block text-xs font-semibold text-gray-700 dark:text-slate-300 mb-1">
+                <label htmlFor={y0InputId} className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   Valor inicial <MathInline math="y_0 = y(x_0)" />
                 </label>
                 <input
@@ -442,23 +442,23 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                   step="any"
                   value={y0Input}
                   onChange={(e) => setY0Input(e.target.value)}
-                  className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono text-sm text-gray-900 dark:text-white font-semibold focus:ring-1 focus:ring-blue-500 focus:outline-hidden"
+                  className="field !text-sm"
                 />
               </div>
             </div>
 
             {/* h and xf */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3">
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label htmlFor={hInputId} className="block text-xs font-semibold text-gray-700 dark:text-slate-300">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label htmlFor={hInputId} className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                     Paso <MathInline math="h" />
                   </label>
                   <button
                     type="button"
                     onClick={handleHalveStep}
                     title="Dividir paso a la mitad (h/2)"
-                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer bg-white dark:bg-slate-800 px-1.5 py-0.5 rounded border border-gray-200 dark:border-slate-700"
+                    className="btn-soft !px-2 !py-0.5 !text-[11px]"
                   >
                     <TrendingDown className="w-3 h-3" />
                     <span>h/2</span>
@@ -470,11 +470,11 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                   step="any"
                   value={hInput}
                   onChange={(e) => setHInput(e.target.value)}
-                  className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono text-sm text-gray-900 dark:text-white font-semibold focus:ring-1 focus:ring-blue-500 focus:outline-hidden"
+                  className="field !text-sm"
                 />
               </div>
               <div>
-                <label htmlFor={xfInputId} className="block text-xs font-semibold text-gray-700 dark:text-slate-300 mb-1">
+                <label htmlFor={xfInputId} className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   Destino final <MathInline math="x_f" />
                 </label>
                 <input
@@ -483,20 +483,16 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                   step="any"
                   value={xfInput}
                   onChange={(e) => setXfInput(e.target.value)}
-                  className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono text-sm text-gray-900 dark:text-white font-semibold focus:ring-1 focus:ring-blue-500 focus:outline-hidden"
+                  className="field !text-sm"
                 />
               </div>
             </div>
 
             {/* Calculate Button */}
             <div className="pt-2">
-              <button
-                type="button"
-                onClick={handleCalculate}
-                className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-xs hover:shadow-md transition-all cursor-pointer"
-              >
+              <button type="button" onClick={handleCalculate} className="btn-primary w-full">
                 <Play className="w-4 h-4 fill-white" />
-                <span>Calcular Solución (Método de Euler)</span>
+                <span>Calcular solución (Método de Euler)</span>
               </button>
             </div>
           </div>
@@ -504,7 +500,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
 
         {/* Error notification */}
         {result && !result.success && result.error && (
-          <div className="p-4 rounded-md bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-900 dark:text-rose-200 flex items-start gap-3">
+          <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-900 dark:text-rose-200 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
             <div>
               <p className="font-bold text-sm">Error en los parámetros:</p>
@@ -521,20 +517,23 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
             steps={result.steps}
             expressionLatex={result.expressionLatex}
             exactExprLatex={exactInput.trim() ? `y(x) = ${exprToLatex(exactInput)}` : undefined}
+            exactExpr={showAdvancedExact ? exactInput : ''}
             hasExact={showAdvancedExact && !!exactInput.trim()}
           />
 
           {/* Dynamic Table */}
-          <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-5 sm:p-6 shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200 dark:border-slate-800 pb-4">
+          <div className="surface p-4 sm:p-6 space-y-4">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
               <div>
-                <div className="flex items-center gap-2">
-                  <FileSpreadsheet className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  <h3 className="font-extrabold text-gray-900 dark:text-white text-lg">
-                    Tabla Dinámica de Iteraciones
+                <div className="flex items-center gap-2.5">
+                  <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-400 text-white shadow-md shadow-emerald-500/25 shrink-0">
+                    <FileSpreadsheet className="w-[18px] h-[18px]" />
+                  </span>
+                  <h3 className="font-extrabold text-slate-900 dark:text-white text-base sm:text-lg">
+                    Tabla dinámica de iteraciones
                   </h3>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
                   Mostrando los <MathInline math={`N = ${result.steps.length - 1}`} /> pasos evaluados desde{' '}
                   <MathInline math={`x_0 = ${result.x0}`} /> hasta <MathInline math={`x_f = ${result.xf}`} /> con paso{' '}
                   <MathInline math={`h = ${result.h}`} />.
@@ -542,24 +541,15 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
               </div>
 
               <div className="flex items-center flex-wrap gap-2">
-                <button
-                  onClick={() => setShowAllStepsBreakdown(!showAllStepsBreakdown)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-200 border border-gray-200 dark:border-slate-700 transition-colors cursor-pointer"
-                >
+                <button onClick={() => setShowAllStepsBreakdown(!showAllStepsBreakdown)} className="btn-soft">
                   <Code2 className="w-3.5 h-3.5" />
-                  <span>{showAllStepsBreakdown ? 'Ocultar Desglose' : 'Ver Fórmulas Paso a Paso'}</span>
+                  <span>{showAllStepsBreakdown ? 'Ocultar desglose' : 'Ver fórmulas paso a paso'}</span>
                 </button>
-                <button
-                  onClick={handleCopyTable}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-200 border border-gray-200 dark:border-slate-700 transition-colors cursor-pointer"
-                >
+                <button onClick={handleCopyTable} className="btn-soft">
                   {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copied ? 'Copiado!' : 'Copiar'}</span>
+                  <span>{copied ? '¡Copiado!' : 'Copiar'}</span>
                 </button>
-                <button
-                  onClick={handleExportCSV}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 transition-colors cursor-pointer"
-                >
+                <button onClick={handleExportCSV} className="btn-soft btn-soft-accent">
                   <Download className="w-3.5 h-3.5" />
                   <span>Exportar CSV</span>
                 </button>
@@ -568,36 +558,34 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
 
             {/* Control Slider de Iteraciones Visibles */}
             {result.steps.length > 2 && (
-              <div className="p-3 bg-gray-50 dark:bg-slate-800/60 rounded-md border border-gray-200 dark:border-slate-700/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-1.5 rounded-md bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-400">
+              <div className="p-3.5 bg-slate-50/80 dark:bg-slate-800/40 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400">
                     <SlidersHorizontal className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="text-xs font-bold text-gray-900 dark:text-slate-100 block">
-                      Slider de Iteraciones
-                    </span>
-                    <span className="text-[11px] text-gray-500 dark:text-slate-400">
-                      Arrastra para acotar la visualización sin extender la página
+                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block">Slider de iteraciones</span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Arrastrá para acotar la visualización sin extender la página
                     </span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2.5 w-full sm:w-auto">
-                  <span className="text-[11px] font-mono font-bold text-gray-500 dark:text-slate-400">0</span>
+                <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+                  <span className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400">0</span>
                   <input
                     type="range"
                     min={1}
                     max={maxStepIndex}
                     value={currentStepLimit}
                     onChange={(e) => setVisibleIterationsLimit(Number(e.target.value))}
-                    className="w-full sm:w-48 h-2 bg-gray-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                    className="flex-1 min-w-[120px] md:w-48 md:flex-none h-2 bg-slate-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer accent-indigo-500"
                     title={`Mostrando hasta el paso n = ${currentStepLimit}`}
                     aria-label="Deslizador de iteraciones visibles"
                   />
-                  <span className="text-[11px] font-mono font-bold text-gray-500 dark:text-slate-400">{maxStepIndex}</span>
+                  <span className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400">{maxStepIndex}</span>
 
-                  <span className="px-2 py-0.5 rounded-md text-xs font-mono font-bold bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 whitespace-nowrap">
+                  <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800 whitespace-nowrap">
                     Paso 0..{currentStepLimit}
                   </span>
 
@@ -605,7 +593,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                     <button
                       type="button"
                       onClick={() => setVisibleIterationsLimit(maxStepIndex)}
-                      className="px-2.5 py-1 text-xs font-semibold rounded-md bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-colors shrink-0 shadow-2xs"
+                      className="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-500 hover:bg-indigo-600 text-white cursor-pointer transition-colors shrink-0"
                     >
                       Ver todas ({result.steps.length})
                     </button>
@@ -613,7 +601,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                     <button
                       type="button"
                       onClick={() => setVisibleIterationsLimit(Math.min(5, maxStepIndex))}
-                      className="px-2.5 py-1 text-xs font-semibold rounded-md bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-700 dark:text-slate-200 cursor-pointer transition-colors shrink-0"
+                      className="px-3 py-1 text-xs font-semibold rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 cursor-pointer transition-colors shrink-0"
                     >
                       Primeras 5
                     </button>
@@ -622,49 +610,49 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
               </div>
             )}
 
-            {/* Table layout with independent vertical scroll slider (max-height) and horizontal scroll */}
-            <div className="overflow-x-auto overflow-y-auto max-h-[440px] rounded-md border border-gray-200 dark:border-slate-800 custom-scrollbar">
+            {/* Table with independent vertical scroll (max-height) and horizontal scroll */}
+            <div className="overflow-x-auto overflow-y-auto max-h-[440px] rounded-2xl border border-slate-200/80 dark:border-slate-700/70 custom-scrollbar">
               <table className="w-full text-left text-xs sm:text-sm">
-                <thead className="sticky top-0 z-10 bg-white dark:bg-slate-900 border-b-2 border-gray-900 dark:border-slate-200">
+                <thead className="sticky top-0 z-10 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur">
                   <tr>
-                    <th className="py-3 px-3 text-center border-b-2 border-gray-900 dark:border-slate-200 font-bold text-gray-900 dark:text-slate-100 uppercase text-[11px] tracking-wider">n</th>
-                    <th className="py-3 px-3 border-b-2 border-gray-900 dark:border-slate-200 font-bold text-gray-900 dark:text-slate-100 text-xs"><MathInline math="x_n" /></th>
-                    <th className="py-3 px-3 border-b-2 border-gray-900 dark:border-slate-200 font-bold text-gray-900 dark:text-slate-100 text-xs"><MathInline math="y_n" /> <span className="font-normal text-[11px] text-gray-500 dark:text-slate-400">(Euler)</span></th>
-                    <th className="py-3 px-3 border-b-2 border-gray-900 dark:border-slate-200 font-bold text-gray-900 dark:text-slate-100 text-xs"><MathInline math="f(x_n, y_n)" /> <span className="font-normal text-[11px] text-gray-500 dark:text-slate-400">(Pendiente)</span></th>
-                    <th className="py-3 px-3 border-b-2 border-gray-900 dark:border-slate-200 font-bold text-gray-900 dark:text-slate-100 text-xs"><MathInline math="y_{n+1}" /> <span className="font-normal text-[11px] text-gray-500 dark:text-slate-400">(Siguiente)</span></th>
+                    <th className="py-3 px-3 text-center border-b border-slate-200 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-200 uppercase text-[11px] tracking-wider">n</th>
+                    <th className="py-3 px-3 border-b border-slate-200 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-200 text-xs"><MathInline math="x_n" /></th>
+                    <th className="py-3 px-3 border-b border-slate-200 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-200 text-xs"><MathInline math="y_n" /> <span className="font-normal text-[11px] text-slate-500 dark:text-slate-400">(Euler)</span></th>
+                    <th className="py-3 px-3 border-b border-slate-200 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-200 text-xs"><MathInline math="f(x_n, y_n)" /> <span className="font-normal text-[11px] text-slate-500 dark:text-slate-400">(Pendiente)</span></th>
+                    <th className="py-3 px-3 border-b border-slate-200 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-200 text-xs"><MathInline math="y_{n+1}" /> <span className="font-normal text-[11px] text-slate-500 dark:text-slate-400">(Siguiente)</span></th>
                     {showAdvancedExact && exactInput.trim() && (
                       <>
-                        <th className="py-3 px-3 border-b-2 border-gray-900 dark:border-slate-200 font-bold text-blue-700 dark:text-blue-400 text-xs"><MathInline math="y_{\text{exact}}(x_n)" /></th>
-                        <th className="py-3 px-3 border-b-2 border-gray-900 dark:border-slate-200 font-bold text-amber-700 dark:text-amber-400 text-xs">Error Abs.</th>
-                        <th className="py-3 px-3 border-b-2 border-gray-900 dark:border-slate-200 font-bold text-amber-700 dark:text-amber-400 text-xs">Error Rel. %</th>
+                        <th className="py-3 px-3 border-b border-slate-200 dark:border-slate-700 font-bold text-emerald-700 dark:text-emerald-400 text-xs"><MathInline math="y_{\text{exact}}(x_n)" /></th>
+                        <th className="py-3 px-3 border-b border-slate-200 dark:border-slate-700 font-bold text-amber-700 dark:text-amber-400 text-xs">Error abs.</th>
+                        <th className="py-3 px-3 border-b border-slate-200 dark:border-slate-700 font-bold text-amber-700 dark:text-amber-400 text-xs">Error rel. %</th>
                       </>
                     )}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-slate-800/60 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-900 dark:text-slate-100">
                   {stepsToRender.map((s) => {
                     const isTerminal = s.n === result.steps[result.steps.length - 1].n;
                     return (
                       <React.Fragment key={s.n}>
-                        <tr className={`hover:bg-gray-50/70 dark:hover:bg-slate-800/40 transition-colors ${isTerminal ? 'bg-blue-50/30 dark:bg-blue-950/20 font-bold' : ''}`}>
-                          <td className="py-2.5 px-3 text-center font-mono font-medium text-gray-700 dark:text-slate-300">
+                        <tr className={`hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 transition-colors ${isTerminal ? 'bg-indigo-50/40 dark:bg-indigo-950/20 font-bold' : ''}`}>
+                          <td className="py-2.5 px-3 text-center font-mono font-medium text-slate-600 dark:text-slate-300">
                             {s.n}
                           </td>
-                          <td className="py-2.5 px-3 font-mono font-medium text-gray-900 dark:text-slate-100">
+                          <td className="py-2.5 px-3 font-mono font-medium text-slate-900 dark:text-slate-100">
                             {formatNum(s.x, 4)}
                           </td>
-                          <td className="py-2.5 px-3 font-mono font-bold text-blue-700 dark:text-blue-300">
+                          <td className="py-2.5 px-3 font-mono font-bold text-indigo-600 dark:text-indigo-300">
                             {formatNum(s.y, 6)}
                           </td>
-                          <td className="py-2.5 px-3 font-mono text-gray-700 dark:text-slate-300">
+                          <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-300">
                             {isTerminal ? '—' : formatNum(s.slope, 6)}
                           </td>
-                          <td className="py-2.5 px-3 font-mono font-medium text-emerald-700 dark:text-emerald-400">
+                          <td className="py-2.5 px-3 font-mono font-medium text-teal-700 dark:text-teal-400">
                             {isTerminal ? '—' : formatNum(s.nextY, 6)}
                           </td>
                           {showAdvancedExact && exactInput.trim() && (
                             <>
-                              <td className="py-2.5 px-3 font-mono font-semibold text-blue-700 dark:text-blue-400">
+                              <td className="py-2.5 px-3 font-mono font-semibold text-emerald-700 dark:text-emerald-400">
                                 {s.yExact !== null && s.yExact !== undefined ? formatNum(s.yExact, 6) : '—'}
                               </td>
                               <td className="py-2.5 px-3 font-mono text-amber-700 dark:text-amber-400 font-semibold">
@@ -679,9 +667,9 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                           )}
                         </tr>
                         {showAllStepsBreakdown && !isTerminal && (
-                          <tr className="bg-gray-50/80 dark:bg-slate-800/40 border-l-2 border-blue-600 dark:border-blue-400 text-xs text-gray-800 dark:text-slate-200">
+                          <tr className="bg-slate-50/80 dark:bg-slate-800/40 border-l-2 border-indigo-500 dark:border-indigo-400 text-xs text-slate-800 dark:text-slate-200">
                             <td colSpan={showAdvancedExact && exactInput.trim() ? 8 : 5} className="py-2 px-4 font-serif">
-                              <span className="text-blue-700 dark:text-blue-400 font-sans font-bold mr-2 text-[11px] uppercase tracking-wider">Fórmula paso {s.n}:</span>
+                              <span className="text-indigo-600 dark:text-indigo-400 font-sans font-bold mr-2 text-[11px] uppercase tracking-wider">Fórmula paso {s.n}:</span>
                               <MathInline math={s.stepFormulaLatex} />
                             </td>
                           </tr>
@@ -693,19 +681,19 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
               </table>
             </div>
 
-            <div className="p-3.5 rounded-md bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-50/80 to-sky-50/60 dark:from-indigo-950/30 dark:to-sky-950/20 border border-indigo-100 dark:border-indigo-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
               <div>
-                <span className="font-bold text-gray-900 dark:text-slate-200">Resultado final aproximado:</span>
-                <span className="ml-2 font-mono font-bold text-blue-700 dark:text-blue-400 text-sm">
+                <span className="font-bold text-slate-900 dark:text-slate-200">Resultado final aproximado:</span>
+                <span className="ml-2 font-mono font-bold text-indigo-700 dark:text-indigo-300 text-sm">
                   y({result.steps[result.steps.length - 1].x}) ≈ {formatNum(result.steps[result.steps.length - 1].y, 6)}
                 </span>
               </div>
-              <div className="text-gray-500 dark:text-slate-400 font-medium flex items-center gap-2">
+              <div className="text-slate-500 dark:text-slate-400 font-medium flex items-center gap-2">
                 <span>
-                  Iteraciones en vista: <strong className="text-gray-900 dark:text-white font-mono">{stepsToRender.length}</strong> de <strong className="text-gray-900 dark:text-white font-mono">{result.steps.length}</strong>
+                  Iteraciones en vista: <strong className="text-slate-900 dark:text-white font-mono">{stepsToRender.length}</strong> de <strong className="text-slate-900 dark:text-white font-mono">{result.steps.length}</strong>
                 </span>
                 {currentStepLimit < maxStepIndex && (
-                  <span className="text-blue-600 dark:text-blue-400 font-semibold text-[11px]">
+                  <span className="text-indigo-600 dark:text-indigo-400 font-semibold text-[11px]">
                     (desliza para ver más)
                   </span>
                 )}

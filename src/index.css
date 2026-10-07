@@ -3,10 +3,335 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* =========================================================
-   Academic Typography & KaTeX Contrast Enhancement
+   Design tokens — tipografía, radios y sombras suaves
+   ========================================================= */
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Esquinas más amplias en toda la app */
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+
+  /* Sombras difusas con leve tinte índigo */
+  --shadow-2xs: 0 1px 2px 0 rgb(79 70 229 / 0.05);
+  --shadow-xs: 0 1px 3px 0 rgb(30 41 100 / 0.06), 0 8px 24px -12px rgb(79 70 229 / 0.12);
+  --shadow-sm: 0 2px 6px 0 rgb(30 41 100 / 0.06), 0 10px 28px -10px rgb(79 70 229 / 0.18);
+}
+
+:root {
+  --surface: rgb(255 255 255 / 0.78);
+  --surface-border: rgb(226 232 240 / 0.85);
+  --surface-shadow: 0 1px 2px rgb(30 41 100 / 0.04), 0 14px 40px -18px rgb(79 70 229 / 0.22);
+  --surface-shadow-hover: 0 2px 4px rgb(30 41 100 / 0.05), 0 22px 50px -18px rgb(79 70 229 / 0.3);
+}
+
+:root.dark {
+  --surface: rgb(15 23 42 / 0.66);
+  --surface-border: rgb(51 65 85 / 0.65);
+  --surface-shadow: 0 1px 2px rgb(0 0 0 / 0.25), 0 18px 44px -20px rgb(0 0 0 / 0.6);
+  --surface-shadow-hover: 0 2px 4px rgb(0 0 0 / 0.3), 0 24px 54px -20px rgb(99 102 241 / 0.35);
+}
+
+html {
+  font-family: var(--font-sans);
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+}
+
+/* =========================================================
+   Fondo ambiental suave
+   ========================================================= */
+.app-bg {
+  position: relative;
+  isolation: isolate;
+  background-color: #f4f6fb;
+}
+
+.app-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60rem 38rem at 8% -8%, rgb(129 140 248 / 0.2), transparent 60%),
+    radial-gradient(52rem 34rem at 100% 4%, rgb(56 189 248 / 0.16), transparent 62%),
+    radial-gradient(46rem 30rem at 50% 108%, rgb(167 139 250 / 0.14), transparent 60%);
+}
+
+.dark .app-bg {
+  background-color: #070b16;
+}
+
+.dark .app-bg::before {
+  background:
+    radial-gradient(60rem 38rem at 6% -10%, rgb(99 102 241 / 0.22), transparent 60%),
+    radial-gradient(52rem 34rem at 100% 0%, rgb(14 165 233 / 0.14), transparent 62%),
+    radial-gradient(46rem 30rem at 50% 110%, rgb(139 92 246 / 0.16), transparent 60%);
+}
+
+/* =========================================================
+   Componentes reutilizables
    ========================================================= */
 
-/* KaTeX inherits color from container by default */
+/* Tarjeta de vidrio */
+.surface {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: 1.5rem;
+  box-shadow: var(--surface-shadow);
+  -webkit-backdrop-filter: blur(16px) saturate(1.25);
+  backdrop-filter: blur(16px) saturate(1.25);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+/* Las tarjetas existentes (bg-white + rounded-lg) adoptan el mismo lenguaje visual */
+main .rounded-lg.bg-white {
+  background: var(--surface);
+  border-color: var(--surface-border);
+  border-radius: 1.25rem;
+  box-shadow: var(--surface-shadow);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  backdrop-filter: blur(14px) saturate(1.2);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+}
+
+main .rounded-lg.bg-white:hover {
+  box-shadow: var(--surface-shadow-hover);
+}
+
+.dark main .rounded-lg.bg-white {
+  background: var(--surface);
+  border-color: var(--surface-border);
+}
+
+/* Inputs */
+.field {
+  width: 100%;
+  border-radius: 0.875rem;
+  border: 1px solid rgb(203 213 225 / 0.9);
+  background: rgb(255 255 255 / 0.9);
+  color: #0f172a;
+  padding: 0.7rem 0.95rem;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  box-shadow: inset 0 1px 2px rgb(15 23 42 / 0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.field::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.field:hover {
+  border-color: rgb(165 180 252);
+}
+
+.field:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 4px rgb(99 102 241 / 0.16);
+  background: #fff;
+}
+
+.dark .field {
+  background: rgb(15 23 42 / 0.7);
+  border-color: rgb(51 65 85 / 0.9);
+  color: #f1f5f9;
+  box-shadow: none;
+}
+
+.dark .field:hover {
+  border-color: rgb(99 102 241 / 0.7);
+}
+
+.dark .field:focus {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 4px rgb(129 140 248 / 0.2);
+  background: rgb(15 23 42 / 0.95);
+}
+
+/* Botones */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.95rem;
+  padding: 0.8rem 1.1rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(135deg, #6366f1 0%, #4f8bf5 55%, #38bdf8 120%);
+  box-shadow: 0 10px 24px -10px rgb(79 70 229 / 0.65), inset 0 1px 0 rgb(255 255 255 / 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 16px 30px -10px rgb(79 70 229 / 0.7), inset 0 1px 0 rgb(255 255 255 / 0.3);
+}
+
+.btn-soft {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 9999px;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #334155;
+  background: rgb(255 255 255 / 0.7);
+  border: 1px solid rgb(226 232 240);
+  transition: all 0.2s ease;
+}
+
+.btn-soft:hover {
+  color: #4338ca;
+  border-color: rgb(165 180 252);
+  background: #fff;
+  transform: translateY(-1px);
+}
+
+.btn-soft-accent {
+  color: #4338ca;
+  background: rgb(238 242 255);
+  border-color: rgb(199 210 254);
+}
+
+.dark .btn-soft {
+  color: #cbd5e1;
+  background: rgb(30 41 59 / 0.7);
+  border-color: rgb(51 65 85);
+}
+
+.dark .btn-soft:hover {
+  color: #c7d2fe;
+  border-color: rgb(99 102 241 / 0.7);
+  background: rgb(30 41 59);
+}
+
+.dark .btn-soft-accent {
+  color: #c7d2fe;
+  background: rgb(49 46 129 / 0.35);
+  border-color: rgb(67 56 202 / 0.5);
+}
+
+/* Control segmentado */
+.segmented {
+  display: inline-flex;
+  padding: 0.25rem;
+  gap: 0.15rem;
+  border-radius: 9999px;
+  background: rgb(241 245 249 / 0.9);
+  border: 1px solid rgb(226 232 240);
+}
+
+.segmented button {
+  padding: 0.4rem 0.95rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.segmented button:hover {
+  color: #334155;
+}
+
+.segmented .segmented-on {
+  background: #fff;
+  color: #4338ca;
+  box-shadow: 0 2px 8px -2px rgb(79 70 229 / 0.3);
+}
+
+.segmented .segmented-on-warn {
+  color: #b45309;
+  box-shadow: 0 2px 8px -2px rgb(245 158 11 / 0.35);
+}
+
+.dark .segmented {
+  background: rgb(15 23 42 / 0.7);
+  border-color: rgb(51 65 85);
+}
+
+.dark .segmented button {
+  color: #94a3b8;
+}
+
+.dark .segmented button:hover {
+  color: #e2e8f0;
+}
+
+.dark .segmented .segmented-on {
+  background: rgb(51 65 85);
+  color: #c7d2fe;
+  box-shadow: none;
+}
+
+.dark .segmented .segmented-on-warn {
+  color: #fcd34d;
+}
+
+/* Teclas */
+.kbd {
+  display: inline-block;
+  padding: 0.05rem 0.4rem;
+  border-radius: 0.4rem;
+  border: 1px solid rgb(203 213 225);
+  border-bottom-width: 2px;
+  background: rgb(248 250 252);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.dark .kbd {
+  border-color: rgb(71 85 105);
+  background: rgb(30 41 59);
+  color: #cbd5e1;
+}
+
+/* Título con degradado */
+.gradient-text {
+  background: linear-gradient(120deg, #4f46e5 0%, #2563eb 45%, #0ea5e9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.dark .gradient-text {
+  background: linear-gradient(120deg, #a5b4fc 0%, #7dd3fc 60%, #6ee7b7 120%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Rango (slider) */
+input[type='range'] {
+  accent-color: #6366f1;
+}
+
+/* =========================================================
+   Academic Typography & KaTeX
+   ========================================================= */
+
 .katex {
   color: inherit;
   font-size: 1.05em;
@@ -50,7 +375,6 @@
   color: inherit;
 }
 
-/* Formulas matematicas KaTeX: adaptacion rigurosa de contraste segun el modo */
 :root:not(.dark) .katex {
   color: #111827;
 }
@@ -58,7 +382,6 @@
 :root.dark .katex {
   color: #f8fafc;
 }
-
 
 /* Hide scrollbar utility for horizontal scrollable navigation */
 .no-scrollbar::-webkit-scrollbar {
@@ -139,8 +462,15 @@ button:active {
   transform: translateY(1px) scale(0.98);
 }
 
+:focus-visible {
+  outline: 2px solid rgb(129 140 248 / 0.8);
+  outline-offset: 2px;
+}
+
+/* NOTA: `backwards` (no `both`) evita que el transform residual rompa el
+   posicionamiento fixed del gráfico en pantalla completa. */
 main > section {
-  animation: section-enter 0.55s ease both;
+  animation: section-enter 0.55s ease backwards;
 }
 
 main > section:nth-child(2) {
