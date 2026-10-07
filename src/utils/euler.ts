@@ -204,10 +204,9 @@ export function computeEuler(params: {
   let currentY = y0;
   let n = 0;
 
-  // We iterate until currentX reaches xf (with floating point tolerance)
-  const epsilon = h * 0.0001;
-
-  while (currentX < xf - epsilon && n < maxIterations) {
+  // Use a shorter final step when h does not divide the interval exactly.
+  while (currentX < xf && n < maxIterations) {
+    const stepH = Math.min(h, xf - currentX);
     let slope: number;
     try {
       slope = evalFn(currentX, currentY);
@@ -227,7 +226,7 @@ export function computeEuler(params: {
       };
     }
 
-    const nextY = currentY + h * slope;
+    const nextY = currentY + stepH * slope;
     const yExactVal = exactFn ? exactFn(currentX) : null;
     const absError = yExactVal !== null && !isNaN(yExactVal) ? Math.abs(yExactVal - currentY) : null;
     const relError =
@@ -236,9 +235,9 @@ export function computeEuler(params: {
         : null;
 
     // Build clear step formula LaTeX string
-    const formulaLatex = `y_{${n + 1}} = y_{${n}} + h \\cdot f(x_{${n}}, y_{${n}}) = ${formatNum(
+    const formulaLatex = `y_{${n + 1}} = y_{${n}} + ${formatNum(stepH)} \\cdot f(x_{${n}}, y_{${n}}) = ${formatNum(
       currentY
-    )} + ${formatNum(h)} \\cdot (${formatNum(slope)}) = ${formatNum(nextY)}`;
+    )} + ${formatNum(stepH)} \\cdot (${formatNum(slope)}) = ${formatNum(nextY)}`;
 
     steps.push({
       n,
@@ -252,9 +251,24 @@ export function computeEuler(params: {
       stepFormulaLatex: formulaLatex,
     });
 
-    currentX = Number((currentX + h).toFixed(8));
+    currentX = Number((currentX + stepH).toFixed(8));
     currentY = nextY;
     n++;
+  }
+
+  if (currentX < xf && n >= maxIterations) {
+    return {
+      steps,
+      success: false,
+      error: `Se alcanzó el máximo de ${maxIterations} iteraciones antes de llegar a x_f.`,
+      expressionSanitized: sanitized,
+      expressionLatex: exprToLatex(expr),
+      totalIterations: n,
+      h,
+      x0,
+      y0,
+      xf,
+    };
   }
 
   // Final point at xf (where slope and next step can be evaluated or finalized)

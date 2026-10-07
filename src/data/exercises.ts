@@ -43,7 +43,7 @@ export const GUIDE_EXERCISES: GuideExercise[] = [
     xf: 1.0,
     exactFormula: '2 - cos(x) - exp(-x)',
     exactFormulaLatex: 'y(t) = 2 - \\cos(t) - e^{-t}',
-    notes: 'Aparece detallado paso a paso en el apunte teórico-práctico de la cátedra con n=2 iteraciones: y₁ = 0.5 y y₂ = 1.4297.',
+    notes: 'Aparece detallado paso a paso en el apunte teórico-práctico de la cátedra con n=2 iteraciones: y₁ = 0.5 y y₂ = 1.04297.',
   },
   {
     id: 'utn-2c',

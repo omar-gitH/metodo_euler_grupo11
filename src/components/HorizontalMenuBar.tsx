@@ -50,22 +50,22 @@ export const HorizontalMenuBar: React.FC<HorizontalMenuBarProps> = ({
   };
 
   return (
-    <div className="sticky top-16 z-30 w-full bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md border-y border-slate-800 shadow-md">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 flex items-center justify-between relative">
+    <div className="sticky top-0 z-40 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-200 dark:border-slate-800 transition-colors shadow-2xs">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 flex items-center justify-between relative">
         {/* Left Arrow Scroll Button */}
         <button
           onClick={() => scroll('left')}
-          className="hidden sm:flex items-center justify-center w-8 h-8 rounded-full bg-slate-800/90 text-white hover:bg-slate-700 transition-colors z-10 shrink-0 border border-slate-700 shadow-xs cursor-pointer mr-1"
+          className="md:hidden flex items-center justify-center w-7 h-7 rounded-md text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white transition-colors shrink-0 mr-1 cursor-pointer"
           aria-label="Desplazar menú a la izquierda"
           title="Desplazar a la izquierda"
         >
-          <ChevronLeft className="w-4 h-4 text-white" />
+          <ChevronLeft className="w-4 h-4" />
         </button>
 
-        {/* Scrollable Navigation Pills */}
-        <div
+        {/* Flat Tabs Navigation */}
+        <nav
           ref={scrollRef}
-          className="flex-1 overflow-x-auto no-scrollbar scroll-smooth py-2.5 px-1 flex items-center justify-start sm:justify-center gap-2 sm:gap-3 whitespace-nowrap text-white"
+          className="flex-1 overflow-x-auto no-scrollbar scroll-smooth flex items-center justify-start md:justify-center gap-2 sm:gap-6 whitespace-nowrap"
         >
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -74,29 +74,36 @@ export const HorizontalMenuBar: React.FC<HorizontalMenuBarProps> = ({
               <button
                 key={item.id}
                 onClick={() => onNavigate(item.id)}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 ${
+                className={`group inline-flex items-center gap-2 py-3.5 px-2 text-xs sm:text-sm font-semibold border-b-2 transition-all cursor-pointer shrink-0 -mb-[1px] ${
                   isActive
-                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 ring-2 ring-indigo-400'
-                    : 'bg-slate-800/80 text-white hover:bg-slate-700/90 border border-slate-700/80 hover:border-slate-500'
+                    ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:border-slate-700'
                 }`}
               >
-                <Icon className={`w-4 h-4 text-white ${isActive ? 'scale-110' : ''}`} />
-                <span className="text-white font-bold tracking-wide">{item.label}</span>
+                <Icon
+                  className={`w-4 h-4 transition-colors ${
+                    isActive
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-gray-400 group-hover:text-gray-600 dark:text-slate-500 dark:group-hover:text-slate-300'
+                  }`}
+                />
+                <span>{item.label}</span>
               </button>
             );
           })}
-        </div>
+        </nav>
 
         {/* Right Arrow Scroll Button */}
         <button
           onClick={() => scroll('right')}
-          className="hidden sm:flex items-center justify-center w-8 h-8 rounded-full bg-slate-800/90 text-white hover:bg-slate-700 transition-colors z-10 shrink-0 border border-slate-700 shadow-xs cursor-pointer ml-1"
+          className="md:hidden flex items-center justify-center w-7 h-7 rounded-md text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white transition-colors shrink-0 ml-1 cursor-pointer"
           aria-label="Desplazar menú a la derecha"
           title="Desplazar a la derecha"
         >
-          <ChevronRight className="w-4 h-4 text-white" />
+          <ChevronRight className="w-4 h-4" />
         </button>
       </div>
     </div>
   );
 };
+

@@ -28,7 +28,7 @@ export const MathView: React.FC<MathViewProps> = ({ math, block = false, classNa
   if (block) {
     return (
       <div
-        className={`overflow-x-auto py-2 my-1 text-center font-serif text-slate-950 dark:text-slate-100 select-all tracking-normal ${className}`}
+        className={`math-block overflow-x-auto py-2 my-1 text-center font-serif text-gray-900 dark:text-slate-100 select-all tracking-normal ${className}`}
         dangerouslySetInnerHTML={{ __html: html }}
       />
     );
@@ -36,7 +36,7 @@ export const MathView: React.FC<MathViewProps> = ({ math, block = false, classNa
 
   return (
     <span
-      className={`inline-block align-middle font-serif text-slate-950 dark:text-slate-100 select-all tracking-normal ${className}`}
+      className={`inline-block align-middle font-serif text-gray-900 dark:text-slate-100 select-all tracking-normal ${className}`}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
