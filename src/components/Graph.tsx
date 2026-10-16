@@ -21,6 +21,8 @@ import {
   Hand,
   BoxSelect,
   CircleDot,
+  ChevronRight,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
@@ -31,6 +33,12 @@ interface GraphProps {
   /** Expresión analítica (mathjs) para muestrear la curva exacta con alta resolución al hacer zoom. */
   exactExpr?: string;
   hasExact: boolean;
+  /** Si está incrustado en el panel unificado con la barra lateral de variables */
+  embedded?: boolean;
+  /** Estado del panel lateral de variables (abierto/colapsado) */
+  isPanelOpen?: boolean;
+  /** Callback para alternar el panel lateral de variables */
+  onTogglePanel?: () => void;
 }
 
 interface View {
@@ -84,6 +92,9 @@ const GraphCanvas: React.FC<GraphProps> = ({
   exactExprLatex,
   exactExpr,
   hasExact,
+  embedded = false,
+  isPanelOpen = true,
+  onTogglePanel,
 }) => {
   const { isDarkMode, isDark } = useTheme();
   const dark = isDarkMode !== undefined ? isDarkMode : isDark;
@@ -536,7 +547,7 @@ const GraphCanvas: React.FC<GraphProps> = ({
   // Paleta suave según tema
   const C = dark
     ? {
-        euler: '#818cf8',
+        euler: '#7fa3d6',
         exact: '#34d399',
         err: '#fb7185',
         grid: 'rgba(148,163,184,0.14)',
@@ -547,7 +558,7 @@ const GraphCanvas: React.FC<GraphProps> = ({
         node: '#0b1020',
       }
     : {
-        euler: '#6366f1',
+        euler: '#2c4f8a',
         exact: '#10b981',
         err: '#f43f5e',
         grid: 'rgba(100,116,139,0.15)',
@@ -575,16 +586,31 @@ const GraphCanvas: React.FC<GraphProps> = ({
       className={
         fullscreen
           ? 'fixed inset-0 z-[100] flex flex-col p-2 sm:p-5 bg-slate-100/90 dark:bg-slate-950/90 backdrop-blur-xl'
-          : ''
+          : 'h-full flex flex-col'
       }
     >
       <div
-        className={`surface p-4 sm:p-6 flex flex-col gap-4 ${fullscreen ? 'flex-1 min-h-0' : ''}`}
+        className={`${
+          embedded && !fullscreen ? 'p-4 sm:p-6' : 'surface p-4 sm:p-6'
+        } flex flex-col gap-4 ${fullscreen ? 'flex-1 min-h-0' : 'h-full'}`}
       >
         {/* Cabecera */}
         <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2.5">
+              {embedded && onTogglePanel && !isPanelOpen && (
+                <button
+                  type="button"
+                  onClick={onTogglePanel}
+                  className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-all cursor-pointer shadow-sm group shrink-0"
+                  title="Ingresar variables y ecuación diferencial"
+                  aria-label="Ingresar variables y ecuación"
+                >
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 group-hover:rotate-45 transition-transform" />
+                  <span className="text-xs font-bold">Ingresar variables y ecuación</span>
+                  <ChevronRight className="w-4 h-4 text-indigo-500 group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              )}
               <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-sky-400 text-white shadow-md shadow-indigo-500/25 shrink-0">
                 <TrendingUp className="w-[18px] h-[18px]" />
               </span>
@@ -988,7 +1014,7 @@ const GraphCanvas: React.FC<GraphProps> = ({
 export const Graph: React.FC<GraphProps> = (props) => {
   if (!props.steps || props.steps.length === 0) {
     return (
-      <div className="surface p-10 text-center text-slate-500 dark:text-slate-400">
+      <div className={`${props.embedded ? 'p-10' : 'surface p-10'} text-center text-slate-500 dark:text-slate-400 flex flex-col items-center justify-center h-full min-h-[380px]`}>
         <TrendingUp className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
         <p className="font-semibold">No hay datos para graficar.</p>
         <p className="text-xs text-slate-400 mt-1">

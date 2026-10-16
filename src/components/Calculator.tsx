@@ -13,6 +13,8 @@ import {
   Sparkles,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   FileSpreadsheet,
   TrendingDown,
   Code2,
@@ -39,6 +41,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
   const [xfInput, setXfInput] = useState<string>(String(initialValues?.xf ?? 1.0));
   const [exactInput, setExactInput] = useState<string>(initialValues?.exact || 'x + exp(-x)');
   const [showAdvancedExact, setShowAdvancedExact] = useState<boolean>(true);
+  const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
 
   // Calculation result state
   const [result, setResult] = useState<EulerResult | null>(null);
@@ -46,6 +49,14 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
   const [activeExerciseId, setActiveExerciseId] = useState<string>('utn-2a');
   const [showAllStepsBreakdown, setShowAllStepsBreakdown] = useState<boolean>(false);
   const [visibleIterationsLimit, setVisibleIterationsLimit] = useState<number | null>(null);
+
+  // Redimensionar el canvas/SVG del gráfico al abrir o colapsar el panel lateral
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 320);
+    return () => clearTimeout(timer);
+  }, [isPanelOpen]);
 
   // Accessible IDs for inputs
   const fnInputId = useId();
@@ -310,216 +321,326 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
         </div>
       </div>
 
-      {/* Main Input Control Panel */}
-      <div className="surface p-5 sm:p-7 space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left Column: Equation Inputs */}
-          <div className="lg:col-span-7 space-y-5">
-            <div>
-              <div className="flex flex-wrap items-center justify-between gap-1 mb-2">
-                <label htmlFor={fnInputId} className="block text-sm font-bold text-slate-900 dark:text-white">
-                  Función diferencial <MathInline math="f(x, y) = y'" />
-                </label>
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Evaluable con mathjs</span>
-              </div>
-              <input
-                id={fnInputId}
-                type="text"
-                value={fnInput}
-                onChange={(e) => setFnInput(e.target.value)}
-                placeholder="Ej: -y + x + 1  ó  sin(x) + exp(-x)"
-                className="field text-base"
-              />
+      {/* Tarjeta Unificada: Panel Lateral Desplegable de Variables + Gráfico 2D */}
+      <div className="surface overflow-hidden transition-all duration-300 relative">
+        {/* Barra superior de control para móviles (pantallas pequeñas) */}
+        <div className="lg:hidden flex items-center justify-between p-3.5 bg-slate-100/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800">
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+            <SlidersHorizontal className="w-4 h-4 text-indigo-500" />
+            <span>Variables y Parámetros EDO</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsPanelOpen(!isPanelOpen)}
+            className="btn-soft !text-xs !py-1 !px-3"
+            aria-expanded={isPanelOpen}
+          >
+            {isPanelOpen ? (
+              <>
+                <span>Ocultar variables</span>
+                <ChevronUp className="w-3.5 h-3.5" />
+              </>
+            ) : (
+              <>
+                <span>Editar variables</span>
+                <ChevronDown className="w-3.5 h-3.5" />
+              </>
+            )}
+          </button>
+        </div>
 
-              {/* Math helpers tokens */}
-              <div className="flex items-center flex-wrap gap-1.5 mt-3">
-                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mr-1">Insertar símbolo:</span>
-                {[
-                  { label: 'e^(-x)', val: 'exp(-x)' },
-                  { label: 'sen(x)', val: 'sin(x)' },
-                  { label: 'cos(x)', val: 'cos(x)' },
-                  { label: 'x^2', val: 'x^2' },
-                  { label: 'y^2', val: 'y^2' },
-                  { label: '2x', val: '2*x' },
-                  { label: '√x', val: 'sqrt(x)' },
-                ].map((item) => (
-                  <button
-                    key={item.label}
-                    type="button"
-                    onClick={() => insertToken(item.val)}
-                    className="btn-soft !font-mono !px-3 !py-1"
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Formula Display Card */}
-            <div className="rounded-2xl p-4 border border-indigo-100 dark:border-indigo-900/50 bg-gradient-to-r from-indigo-50/80 to-sky-50/60 dark:from-indigo-950/30 dark:to-sky-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
-                <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                  Fórmula a resolver (KaTeX)
-                </span>
-              </div>
-              <div className="font-bold text-slate-900 dark:text-white text-base bg-white/90 dark:bg-slate-900/80 px-3.5 py-1.5 rounded-xl border border-slate-200/80 dark:border-slate-700 overflow-x-auto no-scrollbar max-w-full">
-                <MathInline math={`y' = f(x, y) = ${exprToLatex(fnInput || '0')}`} />
-              </div>
-            </div>
-
-            {/* Optional Exact Solution */}
-            <div>
-              <button
-                type="button"
-                onClick={() => setShowAdvancedExact(!showAdvancedExact)}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 cursor-pointer"
-              >
-                {showAdvancedExact ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                <span>
-                  {showAdvancedExact
-                    ? 'Ocultar solución analítica exacta'
-                    : 'Añadir solución analítica exacta y(x) (opcional para comparar error)'}
-                </span>
-              </button>
-
-              {showAdvancedExact && (
-                <div className="mt-3 p-4 bg-emerald-50/60 dark:bg-emerald-950/20 rounded-2xl border border-emerald-100 dark:border-emerald-900/50 space-y-2">
-                  <div className="flex flex-wrap items-center justify-between gap-1">
-                    <label htmlFor={exactInputId} className="block text-xs font-bold text-slate-900 dark:text-slate-200">
-                      Solución analítica exacta <MathInline math="y(x)" />:
-                    </label>
-                    <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium">
-                      Permite computar error absoluto y relativo en cada paso
-                    </span>
+        <div className="flex flex-col lg:flex-row items-stretch min-h-[580px]">
+          {/* Panel Lateral Desplegable de Ingreso de Datos */}
+          <aside
+            id="euler-variables-panel"
+            aria-label="Panel lateral de variables y datos de la ecuación diferencial"
+            className={`transition-all duration-300 ease-in-out shrink-0 ${
+              isPanelOpen
+                ? 'w-full lg:w-[400px] xl:w-[430px] opacity-100'
+                : 'w-0 max-w-0 opacity-0 overflow-hidden pointer-events-none'
+            }`}
+          >
+            <div className="w-full lg:w-[400px] xl:w-[430px] p-5 sm:p-6 space-y-4 bg-slate-50/70 dark:bg-slate-900/50 border-b lg:border-b-0 lg:border-r border-slate-200/80 dark:border-slate-800 h-full overflow-y-auto custom-scrollbar">
+              {/* Encabezado del panel lateral */}
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200/80 dark:border-slate-800">
+                <div className="flex items-center gap-2.5">
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-sky-400 text-white shadow-sm shrink-0">
+                    <SlidersHorizontal className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <h3 className="font-extrabold text-slate-900 dark:text-white text-sm leading-tight">
+                      Variables y Ecuación
+                    </h3>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Parámetros de resolución
+                    </p>
                   </div>
-                  <input
-                    id={exactInputId}
-                    type="text"
-                    value={exactInput}
-                    onChange={(e) => setExactInput(e.target.value)}
-                    placeholder="Ej: x + exp(-x)"
-                    className="field !text-sm"
-                  />
-                  {exactInput.trim() && (
-                    <div className="text-xs text-slate-800 dark:text-slate-300 pt-1 font-medium overflow-x-auto no-scrollbar">
-                      Vista previa analítica: <MathInline math={`y(x) = ${exprToLatex(exactInput)}`} />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsPanelOpen(false)}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-200/70 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                  title="Colapsar panel lateral hacia la izquierda (maximizar gráfico)"
+                  aria-label="Colapsar panel lateral hacia la izquierda"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span className="hidden sm:inline">Colapsar</span>
+                </button>
+              </div>
+
+              {/* Selector de carga rápida de ejercicios de la cátedra */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Ejercicios Guía UTN
+                  </span>
+                  <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">Carga rápida</span>
+                </div>
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                  {GUIDE_EXERCISES.slice(0, 4).map((ex) => (
+                    <button
+                      key={ex.id}
+                      type="button"
+                      onClick={() => handleLoadExercise(ex)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                        activeExerciseId === ex.id
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-indigo-300'
+                      }`}
+                    >
+                      {ex.title.split(':')[0]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Entrada de Función diferencial */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label htmlFor={fnInputId} className="block text-xs font-bold text-slate-900 dark:text-white">
+                    Función diferencial <MathInline math="f(x, y) = y'" />
+                  </label>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">mathjs</span>
+                </div>
+                <input
+                  id={fnInputId}
+                  type="text"
+                  value={fnInput}
+                  onChange={(e) => setFnInput(e.target.value)}
+                  placeholder="Ej: -y + x + 1"
+                  className="field !text-sm !py-2"
+                />
+
+                {/* Tokens matemáticos rápidos */}
+                <div className="flex items-center flex-wrap gap-1 pt-0.5">
+                  <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mr-0.5">Insertar:</span>
+                  {[
+                    { label: 'e^(-x)', val: 'exp(-x)' },
+                    { label: 'sen', val: 'sin(x)' },
+                    { label: 'cos', val: 'cos(x)' },
+                    { label: 'x²', val: 'x^2' },
+                    { label: 'y²', val: 'y^2' },
+                    { label: '2x', val: '2*x' },
+                    { label: '√x', val: 'sqrt(x)' },
+                  ].map((item) => (
+                    <button
+                      key={item.label}
+                      type="button"
+                      onClick={() => insertToken(item.val)}
+                      className="btn-soft !font-mono !px-2 !py-0.5 !text-[11px]"
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tarjeta de visualización de fórmula KaTeX */}
+              <div className="rounded-xl p-2.5 bg-gradient-to-r from-indigo-50/70 to-sky-50/50 dark:from-indigo-950/30 dark:to-sky-950/20 border border-indigo-100 dark:border-indigo-900/40 text-center overflow-x-auto no-scrollbar">
+                <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                  Fórmula a resolver (KaTeX)
+                </div>
+                <div className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
+                  <MathInline math={`y' = f(x, y) = ${exprToLatex(fnInput || '0')}`} />
+                </div>
+              </div>
+
+              {/* Solución analítica exacta opcional */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedExact(!showAdvancedExact)}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 cursor-pointer"
+                >
+                  {showAdvancedExact ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                  <span>{showAdvancedExact ? 'Ocultar sol. analítica' : 'Añadir sol. analítica exacta y(x)'}</span>
+                </button>
+
+                {showAdvancedExact && (
+                  <div className="mt-2 p-3 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl border border-emerald-100 dark:border-emerald-900/40 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label htmlFor={exactInputId} className="block text-[11px] font-bold text-slate-900 dark:text-slate-200">
+                        Solución analítica <MathInline math="y(x)" />:
+                      </label>
+                      <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium">Para error</span>
                     </div>
-                  )}
+                    <input
+                      id={exactInputId}
+                      type="text"
+                      value={exactInput}
+                      onChange={(e) => setExactInput(e.target.value)}
+                      placeholder="Ej: x + exp(-x)"
+                      className="field !text-xs !py-1.5"
+                    />
+                    {exactInput.trim() && (
+                      <div className="text-[11px] text-slate-700 dark:text-slate-300 pt-0.5 overflow-x-auto no-scrollbar">
+                        <MathInline math={`y(x) = ${exprToLatex(exactInput)}`} />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Condiciones iniciales y Dominio */}
+              <div className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/60 dark:bg-slate-800/40 space-y-3">
+                <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  Condición Inicial y Dominio
+                </div>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label htmlFor={x0InputId} className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                      Punto <MathInline math="x_0" />
+                    </label>
+                    <input
+                      id={x0InputId}
+                      type="number"
+                      step="any"
+                      value={x0Input}
+                      onChange={(e) => setX0Input(e.target.value)}
+                      className="field !text-xs !py-1.5"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor={y0InputId} className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                      Valor <MathInline math="y_0" />
+                    </label>
+                    <input
+                      id={y0InputId}
+                      type="number"
+                      step="any"
+                      value={y0Input}
+                      onChange={(e) => setY0Input(e.target.value)}
+                      className="field !text-xs !py-1.5"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label htmlFor={hInputId} className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                        Paso <MathInline math="h" />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleHalveStep}
+                        title="Dividir paso a la mitad (h/2)"
+                        className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold hover:underline"
+                      >
+                        h/2
+                      </button>
+                    </div>
+                    <input
+                      id={hInputId}
+                      type="number"
+                      step="any"
+                      value={hInput}
+                      onChange={(e) => setHInput(e.target.value)}
+                      className="field !text-xs !py-1.5"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor={xfInputId} className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                      Destino <MathInline math="x_f" />
+                    </label>
+                    <input
+                      id={xfInputId}
+                      type="number"
+                      step="any"
+                      value={xfInput}
+                      onChange={(e) => setXfInput(e.target.value)}
+                      className="field !text-xs !py-1.5"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Botón Calcular Solución */}
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={handleCalculate}
+                  className="btn-primary w-full !py-2.5 !text-sm shadow-md shadow-indigo-500/20"
+                >
+                  <Play className="w-4 h-4 fill-white" />
+                  <span>Calcular solución (Euler)</span>
+                </button>
+              </div>
+
+              {/* Alerta de Error si los parámetros son inválidos */}
+              {result && !result.success && result.error && (
+                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-900 dark:text-rose-200 flex items-start gap-2 text-xs">
+                  <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="block font-bold">Error en parámetros:</strong>
+                    <span>{result.error}</span>
+                  </div>
                 </div>
               )}
             </div>
-          </div>
+          </aside>
 
-          {/* Right Column: Initial Conditions & Discretization */}
-          <div className="lg:col-span-5 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-700/70 bg-slate-50/70 dark:bg-slate-800/40 space-y-4">
-            <h4 className="font-extrabold text-slate-900 dark:text-white text-sm pb-2 border-b border-slate-200 dark:border-slate-700">
-              Condición inicial y dominio de trabajo
-            </h4>
-
-            {/* x0 and y0 */}
-            <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3">
-              <div>
-                <label htmlFor={x0InputId} className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Punto inicial <MathInline math="x_0" />
-                </label>
-                <input
-                  id={x0InputId}
-                  type="number"
-                  step="any"
-                  value={x0Input}
-                  onChange={(e) => setX0Input(e.target.value)}
-                  className="field !text-sm"
-                />
-              </div>
-              <div>
-                <label htmlFor={y0InputId} className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Valor inicial <MathInline math="y_0 = y(x_0)" />
-                </label>
-                <input
-                  id={y0InputId}
-                  type="number"
-                  step="any"
-                  value={y0Input}
-                  onChange={(e) => setY0Input(e.target.value)}
-                  className="field !text-sm"
-                />
-              </div>
-            </div>
-
-            {/* h and xf */}
-            <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3">
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label htmlFor={hInputId} className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    Paso <MathInline math="h" />
-                  </label>
+          {/* Área del Gráfico 2D */}
+          <div className="flex-1 min-w-0 transition-all duration-300 relative flex flex-col">
+            {result && result.success && result.steps.length > 0 ? (
+              <Graph
+                steps={result.steps}
+                expressionLatex={result.expressionLatex}
+                exactExprLatex={exactInput.trim() ? `y(x) = ${exprToLatex(exactInput)}` : undefined}
+                exactExpr={showAdvancedExact ? exactInput : ''}
+                hasExact={showAdvancedExact && !!exactInput.trim()}
+                embedded={true}
+                isPanelOpen={isPanelOpen}
+                onTogglePanel={() => setIsPanelOpen(!isPanelOpen)}
+              />
+            ) : (
+              <div className="p-10 text-center text-slate-500 dark:text-slate-400 flex flex-col items-center justify-center h-full min-h-[460px] m-4 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800">
+                <CalcIcon className="w-12 h-12 text-slate-300 dark:text-slate-600 mb-3 animate-pulse" />
+                <h4 className="font-bold text-slate-700 dark:text-slate-200 text-base mb-1">
+                  Esperando parámetros para graficar
+                </h4>
+                <p className="text-xs text-slate-400 dark:text-slate-500 max-w-sm">
+                  {result && result.error
+                    ? result.error
+                    : 'Ingresá la función diferencial y las condiciones iniciales en el panel lateral y hacé clic en "Calcular solución".'}
+                </p>
+                {!isPanelOpen && (
                   <button
                     type="button"
-                    onClick={handleHalveStep}
-                    title="Dividir paso a la mitad (h/2)"
-                    className="btn-soft !px-2 !py-0.5 !text-[11px]"
+                    onClick={() => setIsPanelOpen(true)}
+                    className="btn-primary !py-2 !px-4 mt-4 text-xs"
                   >
-                    <TrendingDown className="w-3 h-3" />
-                    <span>h/2</span>
+                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                    <span>Abrir panel de variables</span>
                   </button>
-                </div>
-                <input
-                  id={hInputId}
-                  type="number"
-                  step="any"
-                  value={hInput}
-                  onChange={(e) => setHInput(e.target.value)}
-                  className="field !text-sm"
-                />
+                )}
               </div>
-              <div>
-                <label htmlFor={xfInputId} className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Destino final <MathInline math="x_f" />
-                </label>
-                <input
-                  id={xfInputId}
-                  type="number"
-                  step="any"
-                  value={xfInput}
-                  onChange={(e) => setXfInput(e.target.value)}
-                  className="field !text-sm"
-                />
-              </div>
-            </div>
-
-            {/* Calculate Button */}
-            <div className="pt-2">
-              <button type="button" onClick={handleCalculate} className="btn-primary w-full">
-                <Play className="w-4 h-4 fill-white" />
-                <span>Calcular solución (Método de Euler)</span>
-              </button>
-            </div>
+            )}
           </div>
         </div>
-
-        {/* Error notification */}
-        {result && !result.success && result.error && (
-          <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-900 dark:text-rose-200 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-bold text-sm">Error en los parámetros:</p>
-              <p className="text-xs mt-0.5">{result.error}</p>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Results Section */}
+      {/* Results Section: Tabla Dinámica de Iteraciones */}
       {result && result.success && result.steps.length > 0 && (
         <div className="space-y-6">
-          <Graph
-            steps={result.steps}
-            expressionLatex={result.expressionLatex}
-            exactExprLatex={exactInput.trim() ? `y(x) = ${exprToLatex(exactInput)}` : undefined}
-            exactExpr={showAdvancedExact ? exactInput : ''}
-            hasExact={showAdvancedExact && !!exactInput.trim()}
-          />
 
           {/* Dynamic Table */}
           <div className="surface p-4 sm:p-6 space-y-4">
