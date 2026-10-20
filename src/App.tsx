@@ -100,39 +100,55 @@ export default function App() {
       >
         {/* Cabecera principal */}
         <header className="relative">
-          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 pt-6 sm:pt-8 pb-6 sm:pb-8">
-            <div className="surface relative overflow-hidden border-t-4 !border-t-indigo-800 dark:!border-t-indigo-400">
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 pt-6 sm:pt-8 pb-5 sm:pb-6">
+            <div className="surface relative overflow-hidden border border-slate-200/90 dark:border-slate-800 shadow-sm">
+              {/* Línea superior con gradiente institucional sutil */}
+              <div className="h-1.5 w-full bg-gradient-to-r from-indigo-700 via-indigo-500 to-sky-500 dark:from-indigo-400 dark:via-indigo-500 dark:to-sky-400" />
+
               {/* Banda institucional */}
-              <div className="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-9 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40">
-                <div className="flex items-center gap-2.5 text-[11px] sm:text-xs font-semibold tracking-[0.12em] uppercase text-slate-600 dark:text-slate-300">
-                  <GraduationCap className="w-4 h-4 shrink-0 text-indigo-700 dark:text-indigo-300" />
+              <div className="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-8 py-3 border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-50/75 dark:bg-slate-900/40">
+                <div className="flex items-center gap-2.5 text-[11px] sm:text-xs font-semibold tracking-[0.14em] uppercase text-slate-600 dark:text-slate-300">
+                  <div className="p-1 rounded-md bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900">
+                    <GraduationCap className="w-3.5 h-3.5" />
+                  </div>
                   <span>Universidad Tecnológica Nacional · FRLP</span>
                   <span className="hidden sm:inline text-slate-300 dark:text-slate-600">|</span>
-                  <span className="hidden sm:inline font-medium normal-case tracking-normal">Cátedra de Análisis Numérico</span>
+                  <span className="hidden sm:inline font-medium normal-case tracking-normal text-slate-500 dark:text-slate-400">
+                    Cátedra de Análisis Numérico
+                  </span>
+                </div>
+
+                <div className="hidden sm:flex items-center gap-2 text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Método Numérico de 1.º Orden</span>
                 </div>
               </div>
 
-              <div className="px-5 py-7 sm:px-9 sm:py-10 space-y-5 text-left">
-                <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-indigo-700 dark:text-indigo-300">
-                  Trabajo práctico · Ecuaciones diferenciales
-                </p>
+              <div className="px-5 py-7 sm:px-8 sm:py-9 space-y-4 text-left">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50/80 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60 text-[11px] font-bold tracking-wider uppercase">
+                  <span>Trabajo práctico · Ecuaciones Diferenciales Ordinarias (EDO)</span>
+                </div>
 
-                <h1 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-bold leading-[1.15] text-slate-900 dark:text-white max-w-4xl">
+                <h1 className="text-3xl sm:text-4xl lg:text-[2.65rem] font-black leading-[1.18] text-slate-900 dark:text-white max-w-4xl tracking-tight">
                   Método de Euler para{' '}
-                  <span className="gradient-text">Ecuaciones Diferenciales Ordinarias</span>
+                  <span className="text-indigo-700 dark:text-indigo-300">
+                    Ecuaciones Diferenciales
+                  </span>
                 </h1>
 
-                <div className="h-px w-full max-w-4xl bg-gradient-to-r from-indigo-800/60 via-slate-300 to-transparent dark:from-indigo-300/60 dark:via-slate-700" />
-
                 <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed max-w-3xl">
-                  Documento técnico interactivo para el estudio y resolución de{' '}
-                  <strong className="text-slate-800 dark:text-white">Problemas de Valor Inicial (P.V.I)</strong> mediante
-                  aproximaciones de primer orden por recta tangente y análisis numérico de convergencia.
+                  Plataforma técnica interactiva para el estudio, resolución y análisis de convergencia de{' '}
+                  <strong className="text-slate-900 dark:text-white font-semibold">Problemas de Valor Inicial (P.V.I)</strong> mediante
+                  aproximaciones de primer orden por recta tangente.
                 </p>
 
-                <div className="inline-flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 border-l-4 !border-l-indigo-700 text-xs sm:text-sm text-slate-800 dark:text-slate-200 max-w-full overflow-x-auto no-scrollbar">
-                  <span className="font-semibold text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400">Esquema iterativo</span>
-                  <MathInline math="y_{n+1} = y_n + h \cdot f(x_n, y_n) \quad \text{con } y(x_0) = y_0" />
+                <div className="pt-2">
+                  <div className="inline-flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 border-l-4 !border-l-indigo-600 text-xs sm:text-sm text-slate-800 dark:text-slate-200 max-w-full overflow-x-auto no-scrollbar shadow-2xs">
+                    <span className="font-bold text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      Esquema Iterativo:
+                    </span>
+                    <MathInline math="y_{n+1} = y_n + h \cdot f(x_n, y_n) \quad \text{con } y(x_0) = y_0" />
+                  </div>
                 </div>
               </div>
             </div>

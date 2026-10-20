@@ -191,6 +191,32 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
     }
   };
 
+  // Adjust number of iterations / subdivisions directly from Graph controls
+  const handleIterationsCountChange = (newN: number) => {
+    const x0 = parseFloat(x0Input);
+    const xf = parseFloat(xfInput);
+    const y0 = parseFloat(y0Input);
+    if (isNaN(x0) || isNaN(xf) || isNaN(y0) || newN < 1) return;
+
+    const span = Math.abs(xf - x0);
+    if (span <= 1e-9) return;
+
+    const rawH = span / newN;
+    const newH = Number(rawH.toFixed(6));
+    if (newH <= 0) return;
+
+    setHInput(String(newH));
+    const res = computeEuler({
+      expr: fnInput,
+      x0,
+      y0,
+      h: newH,
+      xf,
+      exactExpr: showAdvancedExact ? exactInput : '',
+    });
+    setResult(res);
+  };
+
   // Export results to CSV
   const handleExportCSV = () => {
     if (!result || result.steps.length === 0) return;
@@ -292,26 +318,26 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                 key={ex.id}
                 onClick={() => handleLoadExercise(ex)}
                 aria-pressed={active}
-                className={`group text-left p-4 rounded-2xl border transition-all duration-300 cursor-pointer flex flex-col justify-between hover:-translate-y-0.5 ${
+                className={`group text-left p-4 rounded-xl border transition-all duration-300 cursor-pointer flex flex-col justify-between hover:-translate-y-0.5 ${
                   active
-                    ? 'bg-gradient-to-br from-indigo-50 to-sky-50 dark:from-indigo-950/50 dark:to-sky-950/30 border-indigo-300 dark:border-indigo-700 shadow-md shadow-indigo-500/10'
-                    : 'bg-white/60 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-md'
+                    ? 'bg-gradient-to-br from-indigo-50/90 to-sky-50/70 dark:from-indigo-950/60 dark:to-sky-950/40 border-indigo-400 dark:border-indigo-600 shadow-sm shadow-indigo-500/10 ring-1 ring-indigo-400/30'
+                    : 'bg-white dark:bg-slate-850 border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-sm'
                 }`}
               >
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">{ex.title.split(':')[0]}</span>
-                    <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-mono font-bold border border-slate-200 dark:border-slate-600">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-mono font-bold border border-slate-200 dark:border-slate-700">
                       h = {ex.h}
                     </span>
                   </div>
-                  <div className="my-2 bg-white/80 dark:bg-slate-900/70 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 text-center overflow-x-auto no-scrollbar">
+                  <div className="my-2 bg-slate-50/80 dark:bg-slate-900/80 p-2.5 rounded-lg border border-slate-200/80 dark:border-slate-800 text-center overflow-x-auto no-scrollbar">
                     <MathInline math={ex.displayLatex} />
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 mt-2">{ex.description}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 mt-2 leading-relaxed">{ex.description}</p>
                 </div>
 
-                <div className="mt-3 pt-3 border-t border-slate-200/80 dark:border-slate-700/70 flex items-center justify-between text-xs text-indigo-600 dark:text-indigo-400 font-semibold">
+                <div className="mt-3 pt-3 border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between text-xs text-indigo-600 dark:text-indigo-400 font-semibold">
                   <span>Cargar en calculadora</span>
                   <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
                 </div>
@@ -322,17 +348,17 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
       </div>
 
       {/* Tarjeta Unificada: Panel Lateral Desplegable de Variables + Gráfico 2D */}
-      <div className="surface overflow-hidden transition-all duration-300 relative">
+      <div className="surface overflow-hidden relative">
         {/* Barra superior de control para móviles (pantallas pequeñas) */}
-        <div className="lg:hidden flex items-center justify-between p-3.5 bg-slate-100/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800">
+        <div className="lg:hidden flex items-center justify-between p-3.5 bg-slate-100/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
-            <SlidersHorizontal className="w-4 h-4 text-indigo-500" />
+            <SlidersHorizontal className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             <span>Variables y Parámetros EDO</span>
           </div>
           <button
             type="button"
             onClick={() => setIsPanelOpen(!isPanelOpen)}
-            className="btn-soft !text-xs !py-1 !px-3"
+            className="btn-soft !text-xs !py-1 !px-3 font-semibold"
             aria-expanded={isPanelOpen}
           >
             {isPanelOpen ? (
@@ -349,22 +375,22 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
           </button>
         </div>
 
-        <div className="flex flex-col lg:flex-row items-stretch min-h-[580px]">
-          {/* Panel Lateral Desplegable de Ingreso de Datos */}
+        <div className="flex flex-col lg:flex-row items-stretch min-h-[580px] relative">
+          {/* Panel Lateral Desplegable de Ingreso de Datos con transición fluida */}
           <aside
             id="euler-variables-panel"
             aria-label="Panel lateral de variables y datos de la ecuación diferencial"
-            className={`transition-all duration-300 ease-in-out shrink-0 ${
+            className={`drawer-transition shrink-0 overflow-hidden ${
               isPanelOpen
-                ? 'w-full lg:w-[400px] xl:w-[430px] opacity-100'
-                : 'w-0 max-w-0 opacity-0 overflow-hidden pointer-events-none'
+                ? 'w-full lg:w-[410px] xl:w-[430px] opacity-100'
+                : 'w-0 max-w-0 opacity-0 pointer-events-none'
             }`}
           >
-            <div className="w-full lg:w-[400px] xl:w-[430px] p-5 sm:p-6 space-y-4 bg-slate-50/70 dark:bg-slate-900/50 border-b lg:border-b-0 lg:border-r border-slate-200/80 dark:border-slate-800 h-full overflow-y-auto custom-scrollbar">
+            <div className="w-full lg:w-[410px] xl:w-[430px] p-5 sm:p-6 space-y-4 bg-slate-50/80 dark:bg-slate-900/70 border-b lg:border-b-0 lg:border-r border-slate-200/80 dark:border-slate-800 h-full overflow-y-auto custom-scrollbar">
               {/* Encabezado del panel lateral */}
-              <div className="flex items-center justify-between pb-3 border-b border-slate-200/80 dark:border-slate-800">
+              <div className="flex items-center justify-between pb-3.5 border-b border-slate-200/80 dark:border-slate-800">
                 <div className="flex items-center gap-2.5">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-sky-400 text-white shadow-sm shrink-0">
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200/80 dark:border-indigo-800/80 text-indigo-600 dark:text-indigo-400 shadow-2xs shrink-0">
                     <SlidersHorizontal className="w-4 h-4" />
                   </span>
                   <div>
@@ -372,7 +398,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                       Variables y Ecuación
                     </h3>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Parámetros de resolución
+                      Problema de Valor Inicial (P.V.I)
                     </p>
                   </div>
                 </div>
@@ -380,7 +406,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                 <button
                   type="button"
                   onClick={() => setIsPanelOpen(false)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-200/70 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-200/70 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
                   title="Colapsar panel lateral hacia la izquierda (maximizar gráfico)"
                   aria-label="Colapsar panel lateral hacia la izquierda"
                 >
@@ -405,7 +431,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                       onClick={() => handleLoadExercise(ex)}
                       className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                         activeExerciseId === ex.id
-                          ? 'bg-indigo-600 text-white shadow-xs'
+                          ? 'bg-indigo-600 text-white shadow-xs font-bold'
                           : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-indigo-300'
                       }`}
                     >
@@ -421,7 +447,9 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                   <label htmlFor={fnInputId} className="block text-xs font-bold text-slate-900 dark:text-white">
                     Función diferencial <MathInline math="f(x, y) = y'" />
                   </label>
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">mathjs</span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/70 dark:border-slate-700">
+                    mathjs
+                  </span>
                 </div>
                 <input
                   id={fnInputId}
@@ -429,12 +457,14 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                   value={fnInput}
                   onChange={(e) => setFnInput(e.target.value)}
                   placeholder="Ej: -y + x + 1"
-                  className="field !text-sm !py-2"
+                  className="field !text-sm !py-2.5"
                 />
 
                 {/* Tokens matemáticos rápidos */}
-                <div className="flex items-center flex-wrap gap-1 pt-0.5">
-                  <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mr-0.5">Insertar:</span>
+                <div className="flex items-center flex-wrap gap-1 pt-1">
+                  <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mr-1 select-none">
+                    Insertar:
+                  </span>
                   {[
                     { label: 'e^(-x)', val: 'exp(-x)' },
                     { label: 'sen', val: 'sin(x)' },
@@ -448,7 +478,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                       key={item.label}
                       type="button"
                       onClick={() => insertToken(item.val)}
-                      className="btn-soft !font-mono !px-2 !py-0.5 !text-[11px]"
+                      className="px-2 py-0.5 rounded-md text-[11px] font-mono font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/40 hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer shadow-2xs"
                     >
                       {item.label}
                     </button>
@@ -457,9 +487,10 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
               </div>
 
               {/* Tarjeta de visualización de fórmula KaTeX */}
-              <div className="rounded-xl p-2.5 bg-gradient-to-r from-indigo-50/70 to-sky-50/50 dark:from-indigo-950/30 dark:to-sky-950/20 border border-indigo-100 dark:border-indigo-900/40 text-center overflow-x-auto no-scrollbar">
-                <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Fórmula a resolver (KaTeX)
+              <div className="rounded-xl p-3 bg-gradient-to-r from-indigo-50/80 via-white to-sky-50/60 dark:from-indigo-950/40 dark:via-slate-900/50 dark:to-sky-950/30 border border-indigo-100/90 dark:border-indigo-900/50 text-center shadow-2xs overflow-x-auto no-scrollbar">
+                <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-center gap-1.5">
+                  <Sparkles className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
+                  <span>Fórmula a Resolver (KaTeX)</span>
                 </div>
                 <div className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
                   <MathInline math={`y' = f(x, y) = ${exprToLatex(fnInput || '0')}`} />
@@ -471,19 +502,21 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                 <button
                   type="button"
                   onClick={() => setShowAdvancedExact(!showAdvancedExact)}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 cursor-pointer transition-colors"
                 >
                   {showAdvancedExact ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                   <span>{showAdvancedExact ? 'Ocultar sol. analítica' : 'Añadir sol. analítica exacta y(x)'}</span>
                 </button>
 
                 {showAdvancedExact && (
-                  <div className="mt-2 p-3 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl border border-emerald-100 dark:border-emerald-900/40 space-y-1.5">
+                  <div className="mt-2 p-3.5 bg-emerald-50/60 dark:bg-emerald-950/20 rounded-xl border border-emerald-200/80 dark:border-emerald-900/50 space-y-2 shadow-2xs">
                     <div className="flex items-center justify-between">
                       <label htmlFor={exactInputId} className="block text-[11px] font-bold text-slate-900 dark:text-slate-200">
                         Solución analítica <MathInline math="y(x)" />:
                       </label>
-                      <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium">Para error</span>
+                      <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold px-1.5 py-0.2 rounded bg-emerald-100/60 dark:bg-emerald-900/40">
+                        Para error exacto
+                      </span>
                     </div>
                     <input
                       id={exactInputId}
@@ -503,11 +536,14 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
               </div>
 
               {/* Condiciones iniciales y Dominio */}
-              <div className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/60 dark:bg-slate-800/40 space-y-3">
-                <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Condición Inicial y Dominio
+              <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-800/40 space-y-3.5 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    Condición Inicial y Dominio
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500">P.V.I.</span>
                 </div>
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label htmlFor={x0InputId} className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
                       Punto <MathInline math="x_0" />
@@ -542,8 +578,8 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                       <button
                         type="button"
                         onClick={handleHalveStep}
-                        title="Dividir paso a la mitad (h/2)"
-                        className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold hover:underline"
+                        title="Dividir paso a la mitad (h/2) para estudiar convergencia"
+                        className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900 border border-indigo-200/60 dark:border-indigo-800/60 transition-colors"
                       >
                         h/2
                       </button>
@@ -578,9 +614,9 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                 <button
                   type="button"
                   onClick={handleCalculate}
-                  className="btn-primary w-full !py-2.5 !text-sm shadow-md shadow-indigo-500/20"
+                  className="btn-primary w-full !py-2.5 !text-sm shadow-md shadow-indigo-600/20 group cursor-pointer"
                 >
-                  <Play className="w-4 h-4 fill-white" />
+                  <Play className="w-4 h-4 fill-white group-hover:scale-110 transition-transform" />
                   <span>Calcular solución (Euler)</span>
                 </button>
               </div>
@@ -600,9 +636,25 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
 
           {/* Área del Gráfico 2D */}
           <div className="flex-1 min-w-0 transition-all duration-300 relative flex flex-col">
+            {/* Docked Reveal Handle cuando el panel está colapsado en pantallas grandes */}
+            {!isPanelOpen && (
+              <button
+                type="button"
+                onClick={() => setIsPanelOpen(true)}
+                className="hidden lg:inline-flex items-center gap-2 absolute left-4 top-4 z-20 px-3.5 py-2 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 shadow-md hover:bg-indigo-50 dark:hover:bg-indigo-950/80 transition-all cursor-pointer group hover:scale-[1.02] active:scale-[0.98]"
+                title="Desplegar panel de variables y parámetros EDO (hacia la derecha)"
+                aria-label="Desplegar panel de variables y parámetros EDO"
+              >
+                <SlidersHorizontal className="w-4 h-4 text-indigo-600 dark:text-indigo-400 group-hover:rotate-45 transition-transform" />
+                <span className="text-xs font-bold">Parámetros EDO</span>
+                <ChevronRight className="w-4 h-4 text-indigo-500 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            )}
+
             {result && result.success && result.steps.length > 0 ? (
               <Graph
                 steps={result.steps}
+                expression={fnInput}
                 expressionLatex={result.expressionLatex}
                 exactExprLatex={exactInput.trim() ? `y(x) = ${exprToLatex(exactInput)}` : undefined}
                 exactExpr={showAdvancedExact ? exactInput : ''}
@@ -610,6 +662,9 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                 embedded={true}
                 isPanelOpen={isPanelOpen}
                 onTogglePanel={() => setIsPanelOpen(!isPanelOpen)}
+                x0={result.x0}
+                xf={result.xf}
+                onIterationsCountChange={handleIterationsCountChange}
               />
             ) : (
               <div className="p-10 text-center text-slate-500 dark:text-slate-400 flex flex-col items-center justify-center h-full min-h-[460px] m-4 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800">
@@ -626,7 +681,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                   <button
                     type="button"
                     onClick={() => setIsPanelOpen(true)}
-                    className="btn-primary !py-2 !px-4 mt-4 text-xs"
+                    className="btn-primary !py-2 !px-4 mt-4 text-xs font-semibold cursor-pointer"
                   >
                     <SlidersHorizontal className="w-3.5 h-3.5" />
                     <span>Abrir panel de variables</span>

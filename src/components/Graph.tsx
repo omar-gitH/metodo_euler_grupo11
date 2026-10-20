@@ -23,12 +23,20 @@ import {
   CircleDot,
   ChevronRight,
   SlidersHorizontal,
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Sliders,
+  Wand2,
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
 interface GraphProps {
   steps: EulerStep[];
   expressionLatex: string;
+  /** Expresión matemática para evaluar f(x, y) en el campo de direcciones */
+  expression?: string;
   exactExprLatex?: string;
   /** Expresión analítica (mathjs) para muestrear la curva exacta con alta resolución al hacer zoom. */
   exactExpr?: string;
@@ -39,6 +47,10 @@ interface GraphProps {
   isPanelOpen?: boolean;
   /** Callback para alternar el panel lateral de variables */
   onTogglePanel?: () => void;
+  /** Callback opcional para ajustar la cantidad total de iteraciones N recalculando h */
+  onIterationsCountChange?: (n: number) => void;
+  x0?: number;
+  xf?: number;
 }
 
 interface View {
@@ -88,6 +100,7 @@ function formatTick(v: number, step: number) {
 
 const GraphCanvas: React.FC<GraphProps> = ({
   steps,
+  expression,
   expressionLatex,
   exactExprLatex,
   exactExpr,
@@ -95,6 +108,9 @@ const GraphCanvas: React.FC<GraphProps> = ({
   embedded = false,
   isPanelOpen = true,
   onTogglePanel,
+  onIterationsCountChange,
+  x0,
+  xf,
 }) => {
   const { isDarkMode, isDark } = useTheme();
   const dark = isDarkMode !== undefined ? isDarkMode : isDark;
@@ -104,10 +120,38 @@ const GraphCanvas: React.FC<GraphProps> = ({
   const [showExact, setShowExact] = useState(true);
   const [showGrid, setShowGrid] = useState(true);
   const [showPoints, setShowPoints] = useState(true);
+  const [showSplineFit, setShowSplineFit] = useState(false);
   const [tool, setTool] = useState<Tool>('pan');
   const [fullscreen, setFullscreen] = useState(false);
   const [chartHeight, setChartHeight] = useState(420);
   const tab: Tab = hasExact ? activeTab : 'solution';
+
+  // ---------- Control de Iteraciones (Barra de Ajuste) ----------
+  const totalStepsCount = Math.max(0, steps.length - 1);
+  const [visibleStep, setVisibleStep] = useState<number>(totalStepsCount);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [sliderMode, setSliderMode] = useState<'progress' | 'density'>('progress');
+
+  // Mantener visibleStep sincronizado si cambian los pasos desde la calculadora
+  useEffect(() => {
+    setVisibleStep(steps.length - 1);
+    setIsPlaying(false);
+  }, [steps]);
+
+  // Reproducción automática paso a paso
+  useEffect(() => {
+    if (!isPlaying) return;
+    const timer = setInterval(() => {
+      setVisibleStep((prev) => {
+        if (prev >= steps.length - 1) {
+          setIsPlaying(false);
+          return steps.length - 1;
+        }
+        return prev + 1;
+      });
+    }, 220);
+    return () => clearInterval(timer);
+  }, [isPlaying, steps.length]);
 
   // ---------- Datos ----------
   const points = useMemo<ChartPoint[]>(
@@ -121,6 +165,11 @@ const GraphCanvas: React.FC<GraphProps> = ({
         err: s.absError != null && isFinite(s.absError) ? s.absError : null,
       })),
     [steps]
+  );
+
+  const activePoints = useMemo(
+    () => points.slice(0, Math.min(points.length, visibleStep + 1)),
+    [points, visibleStep]
   );
 
   const exactFn = useMemo(
@@ -505,10 +554,38 @@ const GraphCanvas: React.FC<GraphProps> = ({
     return d;
   };
 
+  const toSplinePath = (pts: { x: number; y: number | null }[]) => {
+    const valid = pts.filter((p): p is { x: number; y: number } => p.y != null && isFinite(p.y));
+    if (valid.length < 2) return '';
+    if (valid.length === 2) {
+      return `M${sxOf(valid[0].x).toFixed(2)} ${safeY(valid[0].y).toFixed(2)}L${sxOf(valid[1].x).toFixed(2)} ${safeY(valid[1].y).toFixed(2)}`;
+    }
+    const sPts = valid.map((p) => ({ x: sxOf(p.x), y: safeY(p.y) }));
+    let d = `M${sPts[0].x.toFixed(2)} ${sPts[0].y.toFixed(2)}`;
+    for (let i = 0; i < sPts.length - 1; i++) {
+      const p0 = i > 0 ? sPts[i - 1] : sPts[i];
+      const p1 = sPts[i];
+      const p2 = sPts[i + 1];
+      const p3 = i < sPts.length - 2 ? sPts[i + 2] : p2;
+      const tension = 0.5;
+      const cp1x = p1.x + ((p2.x - p0.x) * tension) / 3;
+      const cp1y = p1.y + ((p2.y - p0.y) * tension) / 3;
+      const cp2x = p2.x - ((p3.x - p1.x) * tension) / 3;
+      const cp2y = p2.y - ((p3.y - p1.y) * tension) / 3;
+      d += ` C${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
+    }
+    return d;
+  };
+
   const mainPts = useMemo(
-    () => points.map((p) => ({ x: p.x, y: tab === 'solution' ? p.euler : p.err })),
-    [points, tab]
+    () => activePoints.map((p) => ({ x: p.x, y: tab === 'solution' ? p.euler : p.err })),
+    [activePoints, tab]
   );
+
+  const splinePath = useMemo(() => {
+    if (!showSplineFit || tab !== 'solution' || activePoints.length < 2) return '';
+    return toSplinePath(mainPts);
+  }, [showSplineFit, tab, activePoints, mainPts]);
 
   const exactPts = useMemo(() => {
     if (tab !== 'solution' || !hasExact || !showExact) return null;
@@ -528,6 +605,7 @@ const GraphCanvas: React.FC<GraphProps> = ({
     return points.map((p) => ({ x: p.x, y: p.exact }));
   }, [tab, hasExact, showExact, exactFn, points, view.xMin, view.xMax, xFirst, xLast]);
 
+
   const xT = niceTicks(view.xMin, view.xMax, Math.max(3, Math.round(pw / 90)));
   const yT = niceTicks(view.yMin, view.yMax, Math.max(3, Math.round(ph / 56)));
 
@@ -537,35 +615,41 @@ const GraphCanvas: React.FC<GraphProps> = ({
     ? `${mainPath}L${sxOf(mainPts[mainPts.length - 1].x).toFixed(2)} ${plotBottom}L${sxOf(mainPts[0].x).toFixed(2)} ${plotBottom}Z`
     : '';
 
-  const visibleNodes = points.filter((p) => p.x >= view.xMin && p.x <= view.xMax).length;
+  const visibleNodes = activePoints.filter((p) => p.x >= view.xMin && p.x <= view.xMax).length;
   const drawNodes = showPoints && visibleNodes <= 160;
 
   const fitSpanX = fit.xMax - fit.xMin;
   const zoomFactor = fitSpanX / (view.xMax - view.xMin);
   const isZoomed = Math.abs(zoomFactor - 1) > 0.02 || Math.abs((fit.yMax - fit.yMin) / (view.yMax - view.yMin) - 1) > 0.02;
 
-  // Paleta suave según tema
+  // Paleta suave y moderna según tema
   const C = dark
     ? {
-        euler: '#7fa3d6',
-        exact: '#34d399',
-        err: '#fb7185',
-        grid: 'rgba(148,163,184,0.14)',
+        euler: '#6366f1',
+        eulerSecondary: '#818cf8',
+        exact: '#10b981',
+        err: '#f43f5e',
+        tangent: '#fbbf24',
+        tangentGlow: 'rgba(251,191,36,0.22)',
+        grid: 'rgba(148,163,184,0.12)',
         axis: 'rgba(148,163,184,0.45)',
         text: '#94a3b8',
         title: '#cbd5e1',
-        plot: 'rgba(15,23,42,0.45)',
+        plot: 'rgba(15,23,42,0.5)',
         node: '#0b1020',
       }
     : {
-        euler: '#2c4f8a',
-        exact: '#10b981',
-        err: '#f43f5e',
-        grid: 'rgba(100,116,139,0.15)',
-        axis: 'rgba(71,85,105,0.5)',
+        euler: '#4f46e5',
+        eulerSecondary: '#6366f1',
+        exact: '#059669',
+        err: '#e11d48',
+        tangent: '#d97706',
+        tangentGlow: 'rgba(217,119,6,0.2)',
+        grid: 'rgba(100,116,139,0.12)',
+        axis: 'rgba(71,85,105,0.45)',
         text: '#64748b',
         title: '#334155',
-        plot: 'rgba(248,250,255,0.75)',
+        plot: 'rgba(248,250,255,0.8)',
         node: '#ffffff',
       };
   const mainColor = tab === 'solution' ? C.euler : C.err;
@@ -574,12 +658,82 @@ const GraphCanvas: React.FC<GraphProps> = ({
   const hoverY = hover ? (tab === 'solution' ? hover.euler : hover.err) : null;
   const hoverX = hover ? sxOf(hover.x) : 0;
   const hoverPy = hoverY != null ? safeY(hoverY) : 0;
+  const hoverNext = hover && hover.n < points.length - 1 ? points[hover.n + 1] : null;
+
+  // Ubicación inteligente del cuadro flotante con separación holgada respecto al cursor y recta tangente
+  const tooltipPlacement = useMemo(() => {
+    if (!hover || hoverY == null) return null;
+
+    // Distancia generosa respecto al cursor y nodo para no tapar la recta tangente ni las etiquetas de muestreo
+    const hGap = compact ? 34 : 46;
+    const tooltipWidth = compact ? 230 : 272;
+    const tooltipHeight = 246;
+
+    // Decidir horizontalmente si se ubica a la DERECHA o IZQUIERDA del punto
+    const canFitRight = hoverX + hGap + tooltipWidth <= W - 8;
+    const canFitLeft = hoverX - hGap - tooltipWidth >= 8;
+    const isRight = canFitRight || !canFitLeft;
+
+    let leftPos = isRight ? hoverX + hGap : hoverX - hGap - tooltipWidth;
+    leftPos = clamp(leftPos, 8, Math.max(8, W - tooltipWidth - 8));
+
+    // Pendiente de la recta tangente en coordenadas de pantalla (px)
+    // En pantalla, dy crece hacia ABAJO, mientras en matemática crece hacia ARRIBA.
+    const mathSlope = isFinite(hover.slope) ? hover.slope : 0;
+    const sx = view.xMax - view.xMin || 1;
+    const sy = view.yMax - view.yMin || 1;
+    const pxPerX = pw / sx;
+    const pxPerY = ph / sy;
+    const screenSlope = -mathSlope * (pxPerY / pxPerX);
+
+    // Ajuste vertical según la dirección de la recta tangente para no superponerse:
+    // Si la recta tangente desciende o asciende en pantalla, colocamos el cuadro en el cuadrante libre
+    let topPos: number;
+    if (isRight) {
+      if (screenSlope > 0.15) {
+        // En x > hoverX la tangente baja en pantalla -> ubicamos el cuadro hacia arriba
+        topPos = hoverPy - tooltipHeight + 35;
+      } else if (screenSlope < -0.15) {
+        // En x > hoverX la tangente sube en pantalla -> ubicamos el cuadro hacia abajo
+        topPos = hoverPy - 35;
+      } else {
+        // Tangente casi horizontal -> ubicar arriba o abajo según posición del nodo con holgura
+        topPos = hoverPy > H / 2 ? hoverPy - tooltipHeight - 20 : hoverPy + 30;
+      }
+    } else {
+      if (screenSlope > 0.15) {
+        // En x < hoverX la tangente estaba más arriba -> ubicamos el cuadro hacia abajo
+        topPos = hoverPy - 35;
+      } else if (screenSlope < -0.15) {
+        // En x < hoverX la tangente estaba más abajo -> ubicamos el cuadro hacia arriba
+        topPos = hoverPy - tooltipHeight + 35;
+      } else {
+        topPos = hoverPy > H / 2 ? hoverPy - tooltipHeight - 20 : hoverPy + 30;
+      }
+    }
+
+    // Clamp seguro para que siempre permanezca visible dentro del lienzo
+    const clampedTop = clamp(topPos, 8, Math.max(8, H - tooltipHeight - 12));
+
+    return {
+      left: leftPos,
+      top: clampedTop,
+      width: tooltipWidth,
+      isRight,
+      screenSlope,
+      pxPerX,
+      connectorStartX: isRight ? hoverX + 16 : hoverX - 16,
+      connectorStartY: hoverPy,
+      connectorEndX: isRight ? leftPos : leftPos + tooltipWidth,
+      connectorEndY: clamp(hoverPy, clampedTop + 24, clampedTop + tooltipHeight - 24),
+    };
+  }, [hover, hoverY, hoverX, hoverPy, W, H, compact, view, pw, ph]);
 
   const toolBtn =
-    'inline-flex items-center justify-center w-9 h-9 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-300 hover:shadow-sm transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-400';
-  const toolBtnOn = 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-sm';
+    'inline-flex items-center justify-center w-9 h-9 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-750 hover:text-indigo-600 dark:hover:text-indigo-300 hover:shadow-2xs transition-all active:scale-95 cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-400';
+  const toolBtnOn = 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-2xs font-bold';
   const chip =
-    'inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer';
+    'inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer select-none active:scale-95';
 
   return (
     <div
@@ -602,7 +756,7 @@ const GraphCanvas: React.FC<GraphProps> = ({
                 <button
                   type="button"
                   onClick={onTogglePanel}
-                  className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-all cursor-pointer shadow-sm group shrink-0"
+                  className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-all cursor-pointer shadow-2xs group shrink-0"
                   title="Ingresar variables y ecuación diferencial"
                   aria-label="Ingresar variables y ecuación"
                 >
@@ -611,7 +765,7 @@ const GraphCanvas: React.FC<GraphProps> = ({
                   <ChevronRight className="w-4 h-4 text-indigo-500 group-hover:translate-x-0.5 transition-transform" />
                 </button>
               )}
-              <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-sky-400 text-white shadow-md shadow-indigo-500/25 shrink-0">
+              <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-sky-400 text-white shadow-md shadow-indigo-500/20 shrink-0">
                 <TrendingUp className="w-[18px] h-[18px]" />
               </span>
               <h3 className="font-extrabold text-slate-900 dark:text-white text-base sm:text-lg leading-tight">
@@ -708,6 +862,25 @@ const GraphCanvas: React.FC<GraphProps> = ({
               <Layers className="w-3.5 h-3.5" />
               Grilla
             </button>
+
+
+
+            {tab === 'solution' && (
+              <button
+                type="button"
+                onClick={() => setShowSplineFit((s) => !s)}
+                aria-pressed={showSplineFit}
+                className={`${chip} ${
+                  showSplineFit
+                    ? 'bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800/70 text-sky-700 dark:text-sky-300 font-bold shadow-2xs'
+                    : 'bg-transparent border-slate-200 dark:border-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                }`}
+                title="Curva continua suavizada (Spline) a través de los nodos de Euler"
+              >
+                <Wand2 className="w-3.5 h-3.5" />
+                Ajuste suave
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-1 p-1 rounded-2xl bg-slate-100/80 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70">
@@ -791,9 +964,21 @@ const GraphCanvas: React.FC<GraphProps> = ({
                 <rect x={m.l} y={m.t} width={pw} height={ph} />
               </clipPath>
               <linearGradient id={`area-${uid}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={mainColor} stopOpacity={dark ? 0.28 : 0.22} />
+                <stop offset="0%" stopColor={mainColor} stopOpacity={dark ? 0.32 : 0.22} />
+                <stop offset="60%" stopColor={mainColor} stopOpacity={dark ? 0.08 : 0.04} />
                 <stop offset="100%" stopColor={mainColor} stopOpacity={0} />
               </linearGradient>
+              <marker
+                id={`tangent-arrow-${uid}`}
+                viewBox="0 0 10 10"
+                refX="8"
+                refY="5"
+                markerWidth="6"
+                markerHeight="6"
+                orient="auto-start-reverse"
+              >
+                <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill={C.tangent} />
+              </marker>
             </defs>
 
             <rect x={m.l} y={m.t} width={pw} height={ph} rx={10} fill={C.plot} />
@@ -802,10 +987,10 @@ const GraphCanvas: React.FC<GraphProps> = ({
             {showGrid && (
               <g>
                 {xT.ticks.map((v) => (
-                  <line key={`gx${v}`} x1={sxOf(v)} x2={sxOf(v)} y1={m.t} y2={plotBottom} stroke={C.grid} strokeDasharray="3 5" />
+                  <line key={`gx${v}`} x1={sxOf(v)} x2={sxOf(v)} y1={m.t} y2={plotBottom} stroke={C.grid} strokeDasharray="2 4" strokeWidth={1} />
                 ))}
                 {yT.ticks.map((v) => (
-                  <line key={`gy${v}`} x1={m.l} x2={m.l + pw} y1={syOf(v)} y2={syOf(v)} stroke={C.grid} strokeDasharray="3 5" />
+                  <line key={`gy${v}`} x1={m.l} x2={m.l + pw} y1={syOf(v)} y2={syOf(v)} stroke={C.grid} strokeDasharray="2 4" strokeWidth={1} />
                 ))}
               </g>
             )}
@@ -826,8 +1011,19 @@ const GraphCanvas: React.FC<GraphProps> = ({
                   d={toPath(exactPts)}
                   fill="none"
                   stroke={C.exact}
-                  strokeWidth={2.2}
-                  strokeDasharray="7 6"
+                  strokeWidth={2.4}
+                  strokeDasharray="7 5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              )}
+
+              {showSplineFit && tab === 'solution' && splinePath && (
+                <path
+                  d={splinePath}
+                  fill="none"
+                  stroke={dark ? '#38bdf8' : '#0284c7'}
+                  strokeWidth={2.4}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
@@ -845,29 +1041,280 @@ const GraphCanvas: React.FC<GraphProps> = ({
               {drawNodes &&
                 mainPts.map((p, i) =>
                   p.y == null ? null : (
-                    <circle
-                      key={i}
-                      cx={sxOf(p.x)}
-                      cy={safeY(p.y)}
-                      r={compact ? 3.2 : 4}
-                      fill={mainColor}
-                      stroke={C.node}
-                      strokeWidth={1.6}
-                    />
+                    <g key={i}>
+                      <circle
+                        cx={sxOf(p.x)}
+                        cy={safeY(p.y)}
+                        r={compact ? 3.5 : 4.5}
+                        fill={C.node}
+                        stroke={mainColor}
+                        strokeWidth={compact ? 1.8 : 2.2}
+                      />
+                      <circle
+                        cx={sxOf(p.x)}
+                        cy={safeY(p.y)}
+                        r={compact ? 1.2 : 1.5}
+                        fill={mainColor}
+                      />
+                    </g>
                   )
                 )}
 
+              {/* Baliza del nodo activo alcanzado en la iteración visible */}
+              {activePoints.length > 0 && (
+                <g pointerEvents="none">
+                  <circle
+                    cx={sxOf(activePoints[activePoints.length - 1].x)}
+                    cy={safeY(tab === 'solution' ? activePoints[activePoints.length - 1].euler : (activePoints[activePoints.length - 1].err ?? 0))}
+                    r={13}
+                    fill={mainColor}
+                    fillOpacity={0.15}
+                  />
+                  <circle
+                    cx={sxOf(activePoints[activePoints.length - 1].x)}
+                    cy={safeY(tab === 'solution' ? activePoints[activePoints.length - 1].euler : (activePoints[activePoints.length - 1].err ?? 0))}
+                    r={8}
+                    fill={mainColor}
+                    fillOpacity={0.3}
+                  />
+                  <circle
+                    cx={sxOf(activePoints[activePoints.length - 1].x)}
+                    cy={safeY(tab === 'solution' ? activePoints[activePoints.length - 1].euler : (activePoints[activePoints.length - 1].err ?? 0))}
+                    r={4.5}
+                    fill={C.node}
+                    stroke={mainColor}
+                    strokeWidth={2.4}
+                  />
+                </g>
+              )}
+
               {hover && hoverY != null && (
                 <g pointerEvents="none">
-                  <line x1={hoverX} x2={hoverX} y1={m.t} y2={plotBottom} stroke={mainColor} strokeOpacity={0.45} strokeDasharray="4 4" />
-                  {tab === 'solution' && showExact && hover.exact != null && (
-                    <circle cx={hoverX} cy={safeY(hover.exact)} r={5} fill={C.exact} stroke={C.node} strokeWidth={2} />
+                  {/* 1. Proyecciones ortogonales de muestreo a los ejes */}
+                  <line
+                    x1={hoverX}
+                    x2={hoverX}
+                    y1={m.t}
+                    y2={plotBottom}
+                    stroke={mainColor}
+                    strokeOpacity={0.45}
+                    strokeDasharray="4 4"
+                    strokeWidth={1.4}
+                  />
+                  <line
+                    x1={m.l}
+                    x2={m.l + pw}
+                    y1={hoverPy}
+                    y2={hoverPy}
+                    stroke={mainColor}
+                    strokeOpacity={0.35}
+                    strokeDasharray="4 4"
+                    strokeWidth={1.4}
+                  />
+
+                  {/* 2. Recta tangente completa y vector de paso de Euler */}
+                  {tab === 'solution' && isFinite(hover.slope) && (
+                    <g>
+                      {/* Resplandor suave de la recta tangente */}
+                      <line
+                        x1={sxOf(view.xMin)}
+                        y1={safeY(hover.euler + hover.slope * (view.xMin - hover.x))}
+                        x2={sxOf(view.xMax)}
+                        y2={safeY(hover.euler + hover.slope * (view.xMax - hover.x))}
+                        stroke={C.tangent}
+                        strokeWidth={6}
+                        strokeOpacity={dark ? 0.22 : 0.16}
+                        strokeLinecap="round"
+                      />
+                      {/* Trazo discontinuo nítido de la recta tangente */}
+                      <line
+                        x1={sxOf(view.xMin)}
+                        y1={safeY(hover.euler + hover.slope * (view.xMin - hover.x))}
+                        x2={sxOf(view.xMax)}
+                        y2={safeY(hover.euler + hover.slope * (view.xMax - hover.x))}
+                        stroke={C.tangent}
+                        strokeWidth={2}
+                        strokeDasharray="7 5"
+                        strokeOpacity={0.95}
+                      />
+
+                      {/* Vector de avance de Euler a lo largo de la recta tangente: [x_n, x_n + h] */}
+                      {hoverNext && (
+                        <line
+                          x1={hoverX}
+                          y1={hoverPy}
+                          x2={sxOf(hoverNext.x)}
+                          y2={safeY(hover.euler + hover.slope * (hoverNext.x - hover.x))}
+                          stroke={C.tangent}
+                          strokeWidth={3.5}
+                          strokeLinecap="round"
+                          markerEnd={`url(#tangent-arrow-${uid})`}
+                        />
+                      )}
+                    </g>
                   )}
-                  <circle cx={hoverX} cy={hoverPy} r={11} fill={mainColor} fillOpacity={0.18} />
-                  <circle cx={hoverX} cy={hoverPy} r={6} fill={mainColor} stroke={C.node} strokeWidth={2.2} />
+
+                  {/* 3. Punto de solución exacta y discrepancia de error local */}
+                  {tab === 'solution' && showExact && hover.exact != null && (
+                    <g>
+                      <circle
+                        cx={hoverX}
+                        cy={safeY(hover.exact)}
+                        r={6}
+                        fill={C.node}
+                        stroke={C.exact}
+                        strokeWidth={2.4}
+                      />
+                      <circle
+                        cx={hoverX}
+                        cy={safeY(hover.exact)}
+                        r={2.5}
+                        fill={C.exact}
+                      />
+                      {Math.abs(hoverPy - safeY(hover.exact)) > 6 && (
+                        <g>
+                          <line
+                            x1={hoverX}
+                            x2={hoverX}
+                            y1={hoverPy}
+                            y2={safeY(hover.exact)}
+                            stroke="#f43f5e"
+                            strokeWidth={2}
+                            strokeDasharray="3 3"
+                            strokeOpacity={0.8}
+                          />
+                          <line
+                            x1={hoverX - 3.5}
+                            x2={hoverX + 3.5}
+                            y1={safeY(hover.exact)}
+                            y2={safeY(hover.exact)}
+                            stroke="#f43f5e"
+                            strokeWidth={1.8}
+                          />
+                        </g>
+                      )}
+                    </g>
+                  )}
+
+                  {/* 4. Retícula focal del nodo inspeccionado */}
+                  <circle cx={hoverX} cy={hoverPy} r={14} fill={mainColor} fillOpacity={0.16} />
+                  <circle cx={hoverX} cy={hoverPy} r={7} fill={C.node} stroke={mainColor} strokeWidth={2.5} />
+                  <circle cx={hoverX} cy={hoverPy} r={3} fill={mainColor} />
                 </g>
               )}
             </g>
+
+            {/* Etiquetas interactivas de muestreo en los ejes X e Y */}
+            {hover && hoverY != null && (
+              <g pointerEvents="none">
+                {/* Badge en el eje X */}
+                {hoverX >= m.l && hoverX <= m.l + pw && (
+                  <g transform={`translate(${hoverX}, ${plotBottom + 13})`}>
+                    <rect
+                      x={-34}
+                      y={-9}
+                      width={68}
+                      height={18}
+                      rx={5}
+                      fill={dark ? '#1e293b' : '#ffffff'}
+                      stroke={mainColor}
+                      strokeWidth={1.5}
+                      filter="drop-shadow(0 1px 3px rgba(0,0,0,0.2))"
+                    />
+                    <text
+                      x={0}
+                      y={3.5}
+                      textAnchor="middle"
+                      fontSize={10}
+                      fontWeight={700}
+                      fontFamily="var(--font-mono)"
+                      fill={mainColor}
+                    >
+                      {formatNum(hover.x, 3)}
+                    </text>
+                  </g>
+                )}
+
+                {/* Badge en el eje Y (Euler) */}
+                {hoverPy >= m.t && hoverPy <= plotBottom && (
+                  <g transform={`translate(${m.l - 4}, ${hoverPy})`}>
+                    <rect
+                      x={-52}
+                      y={-9}
+                      width={50}
+                      height={18}
+                      rx={5}
+                      fill={dark ? '#1e293b' : '#ffffff'}
+                      stroke={mainColor}
+                      strokeWidth={1.5}
+                      filter="drop-shadow(0 1px 3px rgba(0,0,0,0.2))"
+                    />
+                    <text
+                      x={-27}
+                      y={3.5}
+                      textAnchor="middle"
+                      fontSize={9.5}
+                      fontWeight={700}
+                      fontFamily="var(--font-mono)"
+                      fill={mainColor}
+                    >
+                      {formatNum(hover.euler, 3)}
+                    </text>
+                  </g>
+                )}
+
+                {/* Badge en el eje Y (Exacta) */}
+                {tab === 'solution' && showExact && hover.exact != null && safeY(hover.exact) >= m.t && safeY(hover.exact) <= plotBottom && Math.abs(hoverPy - safeY(hover.exact)) > 14 && (
+                  <g transform={`translate(${m.l - 4}, ${safeY(hover.exact)})`}>
+                    <rect
+                      x={-52}
+                      y={-9}
+                      width={50}
+                      height={18}
+                      rx={5}
+                      fill={dark ? '#1e293b' : '#ffffff'}
+                      stroke={C.exact}
+                      strokeWidth={1.5}
+                      filter="drop-shadow(0 1px 3px rgba(0,0,0,0.2))"
+                    />
+                    <text
+                      x={-27}
+                      y={3.5}
+                      textAnchor="middle"
+                      fontSize={9.5}
+                      fontWeight={700}
+                      fontFamily="var(--font-mono)"
+                      fill={C.exact}
+                    >
+                      {formatNum(hover.exact, 3)}
+                    </text>
+                  </g>
+                )}
+              </g>
+            )}
+
+            {/* Línea de guía sutil conectando el nodo muestreado al cuadro flotante */}
+            {hover && hoverY != null && tooltipPlacement && (
+              <g pointerEvents="none">
+                <line
+                  x1={tooltipPlacement.connectorStartX}
+                  y1={tooltipPlacement.connectorStartY}
+                  x2={tooltipPlacement.connectorEndX}
+                  y2={tooltipPlacement.connectorEndY}
+                  stroke={mainColor}
+                  strokeOpacity={dark ? 0.35 : 0.25}
+                  strokeWidth={1.4}
+                  strokeDasharray="3 3"
+                />
+                <circle
+                  cx={tooltipPlacement.connectorEndX}
+                  cy={tooltipPlacement.connectorEndY}
+                  r={2.5}
+                  fill={mainColor}
+                  fillOpacity={0.6}
+                />
+              </g>
+            )}
 
             {/* Etiquetas de ejes */}
             <g fontSize={compact ? 10 : 11} fill={C.text} fontFamily="var(--font-mono)">
@@ -912,47 +1359,113 @@ const GraphCanvas: React.FC<GraphProps> = ({
             )}
           </svg>
 
-          {/* Tooltip */}
-          {hover && hoverY != null && (
+          {/* Cuadro flotante de inspección y muestreo (separado para no tapar la recta tangente) */}
+          {hover && hoverY != null && tooltipPlacement && (
             <div
-              className="absolute pointer-events-none z-10 min-w-[170px] rounded-xl border border-slate-200/80 dark:border-slate-600/70 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-xl shadow-slate-900/10 p-3 text-xs space-y-1 text-slate-800 dark:text-slate-100"
+              className="absolute pointer-events-none z-20 rounded-2xl border border-slate-200/90 dark:border-slate-700/80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-2xl shadow-slate-950/15 p-3.5 text-xs text-slate-800 dark:text-slate-100 transition-all duration-75"
               style={{
-                left: hoverX,
-                top: clamp(hoverPy, 40, H - 40),
-                transform: hoverX > W * 0.58 ? 'translate(calc(-100% - 16px), -50%)' : 'translate(16px, -50%)',
+                left: tooltipPlacement.left,
+                top: tooltipPlacement.top,
+                width: tooltipPlacement.width,
               }}
             >
-              <p className="font-bold text-indigo-600 dark:text-indigo-300 border-b border-slate-200 dark:border-slate-700 pb-1">
-                Iteración #{hover.n} · x = {formatNum(hover.x, 4)}
-              </p>
+              {/* Cabecera con badge de iteración y coordenada */}
+              <div className="flex items-center justify-between gap-2 border-b border-slate-200/80 dark:border-slate-800 pb-2 mb-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                  <span className="font-extrabold text-xs text-indigo-600 dark:text-indigo-400">
+                    Iteración #{hover.n}
+                  </span>
+                </div>
+                <span className="px-2 py-0.5 rounded-md font-mono text-[10.5px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700/70">
+                  x = {formatNum(hover.x, 4)}
+                </span>
+              </div>
+
               {tab === 'solution' ? (
-                <>
-                  <p className="flex justify-between gap-4">
-                    <span className="text-slate-500 dark:text-slate-400">Euler y</span>
-                    <span className="font-mono font-bold text-indigo-600 dark:text-indigo-300">{formatNum(hover.euler, 6)}</span>
-                  </p>
-                  <p className="flex justify-between gap-4">
-                    <span className="text-slate-500 dark:text-slate-400">f(x,y)</span>
-                    <span className="font-mono text-amber-600 dark:text-amber-300">{formatNum(hover.slope, 6)}</span>
-                  </p>
+                <div className="space-y-1.5 text-[11px]">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                      Euler y<sub>n</sub>
+                    </span>
+                    <span className="font-mono font-bold text-indigo-600 dark:text-indigo-300">
+                      {formatNum(hover.euler, 6)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                      Pendiente f(x<sub>n</sub>, y<sub>n</sub>)
+                    </span>
+                    <span className="font-mono font-bold text-amber-600 dark:text-amber-400">
+                      {formatNum(hover.slope, 6)}
+                    </span>
+                  </div>
+
                   {hover.exact != null && (
                     <>
-                      <p className="flex justify-between gap-4">
-                        <span className="text-slate-500 dark:text-slate-400">Exacta</span>
-                        <span className="font-mono font-bold text-emerald-600 dark:text-emerald-300">{formatNum(hover.exact, 6)}</span>
-                      </p>
-                      <p className="flex justify-between gap-4">
-                        <span className="text-slate-500 dark:text-slate-400">Error</span>
-                        <span className="font-mono text-rose-600 dark:text-rose-300">{hover.err != null ? formatNum(hover.err, 6) : '—'}</span>
-                      </p>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          Exacta y(x<sub>n</sub>)
+                        </span>
+                        <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                          {formatNum(hover.exact, 6)}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                          Error local |e<sub>n</sub>|
+                        </span>
+                        <span className="font-mono font-bold text-rose-600 dark:text-rose-400">
+                          {hover.err != null ? formatNum(hover.err, 6) : '—'}
+                        </span>
+                      </div>
                     </>
                   )}
-                </>
+
+                  {/* Ecuación de la recta tangente */}
+                  {isFinite(hover.slope) && (
+                    <div className="mt-2 pt-2 border-t border-slate-200/80 dark:border-slate-800 bg-amber-500/10 dark:bg-amber-400/10 p-2 rounded-xl border border-amber-300/60 dark:border-amber-700/50">
+                      <div className="flex items-center justify-between text-[10px] uppercase font-bold text-amber-700 dark:text-amber-300 mb-0.5">
+                        <span>Recta Tangente</span>
+                        <span>m = {formatNum(hover.slope, 3)}</span>
+                      </div>
+                      <p className="font-mono text-[10.5px] text-slate-700 dark:text-slate-200 break-all leading-snug">
+                        y − {formatNum(hover.euler, 3)} = {formatNum(hover.slope, 3)}·(x − {formatNum(hover.x, 3)})
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Próximo paso si existe */}
+                  {hoverNext && (
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800/80">
+                      <span>Paso h = {formatNum(hoverNext.x - hover.x, 4)}:</span>
+                      <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">
+                        y<sub>{hover.n + 1}</sub> = {formatNum(hoverNext.euler, 5)}
+                      </span>
+                    </div>
+                  )}
+                </div>
               ) : (
-                <p className="flex justify-between gap-4">
-                  <span className="text-slate-500 dark:text-slate-400">Error absoluto</span>
-                  <span className="font-mono font-bold text-rose-600 dark:text-rose-300">{formatNum(hoverY, 6)}</span>
-                </p>
+                <div className="space-y-1.5 text-[11px]">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-slate-500 dark:text-slate-400">Error absoluto |e<sub>n</sub>|:</span>
+                    <span className="font-mono font-bold text-rose-600 dark:text-rose-400 text-sm">
+                      {formatNum(hoverY, 6)}
+                    </span>
+                  </div>
+                  {hover.exact != null && (
+                    <div className="flex items-center justify-between gap-3 text-[10.5px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800">
+                      <span>Exacta: {formatNum(hover.exact, 4)}</span>
+                      <span>Euler: {formatNum(hover.euler, 4)}</span>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           )}
@@ -986,6 +1499,246 @@ const GraphCanvas: React.FC<GraphProps> = ({
                   {p.label}
                 </button>
               ))}
+            </div>
+          )}
+        </div>
+
+        {/* Barra de Control y Ajuste de Iteraciones */}
+        <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-3.5 sm:p-4 space-y-3 shadow-xs">
+          {/* Cabecera de la barra con modos y datos del paso actual */}
+          <div className="flex flex-wrap items-center justify-between gap-2.5 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-bold">
+                <Sliders className="w-4 h-4" />
+              </span>
+              <div>
+                <span className="font-extrabold text-slate-800 dark:text-slate-100">
+                  {sliderMode === 'progress'
+                    ? 'Ajuste de Iteraciones (Avance Paso a Paso)'
+                    : 'Ajuste de Malla (Densidad de Iteraciones N)'}
+                </span>
+                <span className="text-[11px] text-slate-400 dark:text-slate-500 block">
+                  {sliderMode === 'progress'
+                    ? `Mostrando ${visibleStep} de ${totalStepsCount} iteraciones de la curva`
+                    : `Resolución del método: N = ${totalStepsCount} pasos (h = ${formatNum(
+                        (points[points.length - 1].x - points[0].x) / (totalStepsCount || 1),
+                        4
+                      )})`}
+                </span>
+              </div>
+            </div>
+
+            {/* Selector de modo */}
+            <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/70 dark:border-slate-700/70">
+              <button
+                type="button"
+                onClick={() => setSliderMode('progress')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  sliderMode === 'progress'
+                    ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-xs'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
+                }`}
+                title="Deslizar para ver la curva paso a paso de 0 a N"
+              >
+                Paso a Paso
+              </button>
+              {onIterationsCountChange && (
+                <button
+                  type="button"
+                  onClick={() => setSliderMode('density')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    sliderMode === 'density'
+                      ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-xs'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
+                  }`}
+                  title="Ajustar la cantidad total de iteraciones N para ver cómo converge la curva"
+                >
+                  Densidad (N)
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Fila del Slider + Botones de Control */}
+          {sliderMode === 'progress' ? (
+            <div className="flex items-center gap-2 sm:gap-3">
+              {/* Botón Play / Pause */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (visibleStep >= totalStepsCount) {
+                    setVisibleStep(0);
+                    setIsPlaying(true);
+                  } else {
+                    setIsPlaying(!isPlaying);
+                  }
+                }}
+                className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-white transition-all shadow-sm cursor-pointer shrink-0 ${
+                  isPlaying
+                    ? 'bg-amber-500 hover:bg-amber-600'
+                    : 'bg-indigo-600 hover:bg-indigo-700'
+                }`}
+                title={isPlaying ? 'Pausar avance' : 'Reproducir avance automático'}
+                aria-label={isPlaying ? 'Pausar avance' : 'Reproducir avance'}
+              >
+                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+              </button>
+
+              {/* Botón Paso Anterior */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPlaying(false);
+                  setVisibleStep((p) => Math.max(0, p - 1));
+                }}
+                disabled={visibleStep <= 0}
+                className="w-8 h-8 rounded-lg flex items-center justify-center border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0"
+                title="Paso anterior (k - 1)"
+                aria-label="Paso anterior"
+              >
+                <SkipBack className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Barra Deslizante (Range Input) */}
+              <div className="flex-1 min-w-0 flex flex-col justify-center">
+                <input
+                  type="range"
+                  min="0"
+                  max={totalStepsCount}
+                  step="1"
+                  value={visibleStep}
+                  onChange={(e) => {
+                    setIsPlaying(false);
+                    setVisibleStep(Number(e.target.value));
+                  }}
+                  className="w-full h-2.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-600 dark:accent-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/50"
+                  aria-label="Ajustar iteración de la curva"
+                />
+                <div className="flex justify-between items-center text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-1 select-none">
+                  <span>0 (Inicio)</span>
+                  <span className="font-bold text-indigo-600 dark:text-indigo-400 font-sans">
+                    Paso #{visibleStep}
+                  </span>
+                  <span>{totalStepsCount} (Final)</span>
+                </div>
+              </div>
+
+              {/* Botón Paso Siguiente */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPlaying(false);
+                  setVisibleStep((p) => Math.min(totalStepsCount, p + 1));
+                }}
+                disabled={visibleStep >= totalStepsCount}
+                className="w-8 h-8 rounded-lg flex items-center justify-center border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0"
+                title="Paso siguiente (k + 1)"
+                aria-label="Paso siguiente"
+              >
+                <SkipForward className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Botón Ver Toda la Curva */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPlaying(false);
+                  setVisibleStep(totalStepsCount);
+                }}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer shrink-0 ${
+                  visibleStep === totalStepsCount
+                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'
+                    : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100'
+                }`}
+                title="Mostrar todas las iteraciones"
+              >
+                Ver todo
+              </button>
+            </div>
+          ) : (
+            /* Modo Densidad de Iteraciones (N) */
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex-1 min-w-0">
+                <input
+                  type="range"
+                  min="2"
+                  max="100"
+                  step="1"
+                  value={totalStepsCount}
+                  onChange={(e) => {
+                    const newN = Number(e.target.value);
+                    onIterationsCountChange?.(newN);
+                  }}
+                  className="w-full h-2.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-600 dark:accent-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/50"
+                  aria-label="Ajustar cantidad total de iteraciones N"
+                />
+                <div className="flex justify-between items-center text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-1 select-none">
+                  <span>N = 2 (malla gruesa)</span>
+                  <span className="font-bold text-indigo-600 dark:text-indigo-400 font-sans">
+                    N = {totalStepsCount} pasos
+                  </span>
+                  <span>N = 100 (alta resolución)</span>
+                </div>
+              </div>
+
+              {/* Botones rápidos de N */}
+              <div className="flex items-center gap-1.5 shrink-0 overflow-x-auto no-scrollbar">
+                {[5, 10, 20, 50, 100].map((presetN) => (
+                  <button
+                    key={presetN}
+                    type="button"
+                    onClick={() => onIterationsCountChange?.(presetN)}
+                    className={`px-2 py-1 rounded-md text-[11px] font-bold border transition-all cursor-pointer ${
+                      totalStepsCount === presetN
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
+                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-300'
+                    }`}
+                  >
+                    N={presetN}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Badge Informativo de la Iteración Actual */}
+          {activePoints.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 pt-2 border-t border-slate-200/70 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-300 font-medium">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span>
+                  Nodo actual: <strong className="font-mono text-indigo-600 dark:text-indigo-400 font-bold">n = {activePoints[activePoints.length - 1].n}</strong>
+                </span>
+                <span>·</span>
+                <span>
+                  x = <strong className="font-mono text-slate-800 dark:text-slate-100">{formatNum(activePoints[activePoints.length - 1].x, 4)}</strong>
+                </span>
+                <span>·</span>
+                <span>
+                  y_Euler = <strong className="font-mono text-indigo-600 dark:text-indigo-400 font-bold">{formatNum(activePoints[activePoints.length - 1].euler, 6)}</strong>
+                </span>
+                <span>·</span>
+                <span>
+                  f(x,y) = <strong className="font-mono text-amber-600 dark:text-amber-400">{formatNum(activePoints[activePoints.length - 1].slope, 4)}</strong>
+                </span>
+                {activePoints[activePoints.length - 1].exact != null && (
+                  <>
+                    <span>·</span>
+                    <span>
+                      y_exacta = <strong className="font-mono text-emerald-600 dark:text-emerald-400">{formatNum(activePoints[activePoints.length - 1].exact!, 6)}</strong>
+                    </span>
+                    <span>·</span>
+                    <span>
+                      Error = <strong className="font-mono text-rose-600 dark:text-rose-400">{formatNum(activePoints[activePoints.length - 1].err ?? 0, 6)}</strong>
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {visibleStep < totalStepsCount && (
+                <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-800">
+                  Visualización parcial (Paso {visibleStep} / {totalStepsCount})
+                </span>
+              )}
             </div>
           )}
         </div>
