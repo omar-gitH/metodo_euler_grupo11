@@ -60,6 +60,7 @@
   --ink: #0f172a;
   --ink-soft: #475569;
   --accent: #1e487e;
+  --focus-ring: rgb(37 90 154 / 0.24);
 }
 
 :root.dark {
@@ -70,6 +71,7 @@
   --ink: #f8fafc;
   --ink-soft: #94a3b8;
   --accent: #8eb3de;
+  --focus-ring: rgb(142 179 222 / 0.3);
 }
 
 html {
@@ -82,6 +84,7 @@ html {
 body {
   margin: 0;
   overflow-x: hidden;
+  background: #f8fafc;
 }
 
 /* Títulos con tipografía moderna y de estilo editorial / académico */
@@ -97,7 +100,10 @@ h3 {
 .app-bg {
   position: relative;
   isolation: isolate;
-  background-color: #f8fafc;
+  background:
+    radial-gradient(circle at 12% 0%, rgb(56 115 181 / 0.08), transparent 28rem),
+    radial-gradient(circle at 92% 18%, rgb(63 134 176 / 0.05), transparent 24rem),
+    #f8fafc;
 }
 
 .app-bg::before {
@@ -115,7 +121,10 @@ h3 {
 }
 
 .dark .app-bg {
-  background-color: #070d18;
+  background:
+    radial-gradient(circle at 12% 0%, rgb(56 115 181 / 0.13), transparent 28rem),
+    radial-gradient(circle at 92% 18%, rgb(63 134 176 / 0.08), transparent 24rem),
+    #070d18;
 }
 
 .dark .app-bg::before {
@@ -134,7 +143,11 @@ h3 {
   border: 1px solid var(--surface-border);
   border-radius: 1rem;
   box-shadow: var(--surface-shadow);
-  transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
+  transition:
+    background-color 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease,
+    transform 0.2s ease;
 }
 
 .surface:hover {
@@ -179,6 +192,7 @@ main .rounded-lg.bg-white:hover {
 .drawer-transition {
   transition: width 360ms cubic-bezier(0.16, 1, 0.3, 1),
               max-width 360ms cubic-bezier(0.16, 1, 0.3, 1),
+              max-height 360ms cubic-bezier(0.16, 1, 0.3, 1),
               opacity 260ms cubic-bezier(0.16, 1, 0.3, 1),
               transform 360ms cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -442,6 +456,21 @@ input[type='range'] {
   letter-spacing: 0.01em;
 }
 
+.euler-calculator .surface {
+  position: relative;
+  overflow: clip;
+}
+
+.euler-calculator .surface:focus-within {
+  border-color: rgb(92 145 204 / 0.55);
+  box-shadow: 0 8px 28px -14px rgb(30 72 126 / 0.24);
+}
+
+.dark .euler-calculator .surface:focus-within {
+  border-color: rgb(142 179 222 / 0.55);
+  box-shadow: 0 10px 30px -14px rgb(0 0 0 / 0.75);
+}
+
 @media (max-width: 640px) {
   .math-block {
     font-size: 1.05rem;
@@ -523,6 +552,7 @@ table {
 .custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(44, 79, 138, 0.5) rgba(148, 163, 184, 0.18);
+  scrollbar-gutter: stable;
 }
 
 .dark .custom-scrollbar {
@@ -546,6 +576,7 @@ table {
 html {
   transition: background-color 0.2s ease, color 0.2s ease;
   scroll-behavior: smooth;
+  scroll-padding-top: 4.5rem;
 }
 
 button {
@@ -557,18 +588,20 @@ button:active {
 }
 
 :focus-visible {
-  outline: 2px solid rgb(44 79 138 / 0.8);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .dark :focus-visible {
-  outline-color: rgb(143 176 224 / 0.85);
+  outline-color: var(--focus-ring);
 }
 
 /* NOTA: `backwards` (no `both`) evita que el transform residual rompa el
    posicionamiento fixed del gráfico en pantalla completa. */
 main > section {
   animation: section-enter 0.45s ease backwards;
+  scroll-margin-top: 4.5rem;
 }
 
 main > section:nth-child(2) {
@@ -602,5 +635,11 @@ main > section:nth-child(4) {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@media (hover: hover) {
+  .surface:hover {
+    box-shadow: var(--surface-shadow-hover);
   }
 }

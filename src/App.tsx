@@ -18,14 +18,17 @@ export default function App() {
     }
   });
   const [activeSection, setActiveSection] = useState<string>('teoria');
-  const [calculatorPreset, setCalculatorPreset] = useState<{
-    fn: string;
-    x0: number;
-    y0: number;
-    h: number;
-    xf: number;
-    exact?: string;
-  } | undefined>(undefined);
+  const [calculatorPreset, setCalculatorPreset] = useState<
+    | {
+        fn: string;
+        x0: number;
+        y0: number;
+        h: number;
+        xf: number;
+        exact?: string;
+      }
+    | undefined
+  >(undefined);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -45,7 +48,9 @@ export default function App() {
 
     if (sections.length === 0) return;
 
+    let frameId: number | null = null;
     const updateActiveSection = () => {
+      frameId = null;
       const readingLine = window.innerHeight * 0.28;
       const currentSection = sections.find((section) => {
         const bounds = section.getBoundingClientRect();
@@ -56,18 +61,25 @@ export default function App() {
         setActiveSection(currentSection.id);
       }
     };
+    const handleScroll = () => {
+      if (frameId === null) {
+        frameId = window.requestAnimationFrame(updateActiveSection);
+      }
+    };
 
     updateActiveSection();
-    window.addEventListener('scroll', updateActiveSection, { passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', updateActiveSection);
 
     return () => {
-      window.removeEventListener('scroll', updateActiveSection);
+      window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', updateActiveSection);
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
     };
   }, []);
 
-  // Smooth scroll
   const scrollTo = (sectionId: string) => {
     setActiveSection(sectionId);
     const elem = document.getElementById(sectionId);
@@ -76,7 +88,6 @@ export default function App() {
     }
   };
 
-  // Load exercise into calculator and scroll
   const handleSelectExercise = (ex: GuideExercise) => {
     setCalculatorPreset({
       fn: ex.fnString,
@@ -98,64 +109,7 @@ export default function App() {
             : 'text-slate-900 selection:bg-indigo-100 selection:text-indigo-900'
         }`}
       >
-        {/* Cabecera principal */}
-        <header className="relative">
-          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 pt-6 sm:pt-8 pb-5 sm:pb-6">
-            <div className="surface relative overflow-hidden border border-slate-200/90 dark:border-slate-800 shadow-sm">
-              {/* Línea superior con gradiente institucional sutil */}
-              <div className="h-1.5 w-full bg-gradient-to-r from-indigo-700 via-indigo-500 to-sky-500 dark:from-indigo-400 dark:via-indigo-500 dark:to-sky-400" />
-
-              {/* Banda institucional */}
-              <div className="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-8 py-3 border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-50/75 dark:bg-slate-900/40">
-                <div className="flex items-center gap-2.5 text-[11px] sm:text-xs font-semibold tracking-[0.14em] uppercase text-slate-600 dark:text-slate-300">
-                  <div className="p-1 rounded-md bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900">
-                    <GraduationCap className="w-3.5 h-3.5" />
-                  </div>
-                  <span>Universidad Tecnológica Nacional · FRLP</span>
-                  <span className="hidden sm:inline text-slate-300 dark:text-slate-600">|</span>
-                  <span className="hidden sm:inline font-medium normal-case tracking-normal text-slate-500 dark:text-slate-400">
-                    Cátedra de Análisis Numérico
-                  </span>
-                </div>
-
-                <div className="hidden sm:flex items-center gap-2 text-[11px] font-mono text-slate-500 dark:text-slate-400">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Método Numérico de 1.º Orden</span>
-                </div>
-              </div>
-
-              <div className="px-5 py-7 sm:px-8 sm:py-9 space-y-4 text-left">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50/80 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60 text-[11px] font-bold tracking-wider uppercase">
-                  <span>Trabajo práctico · Ecuaciones Diferenciales Ordinarias (EDO)</span>
-                </div>
-
-                <h1 className="text-3xl sm:text-4xl lg:text-[2.65rem] font-black leading-[1.18] text-slate-900 dark:text-white max-w-4xl tracking-tight">
-                  Método de Euler para{' '}
-                  <span className="text-indigo-700 dark:text-indigo-300">
-                    Ecuaciones Diferenciales
-                  </span>
-                </h1>
-
-                <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed max-w-3xl">
-                  Plataforma técnica interactiva para el estudio, resolución y análisis de convergencia de{' '}
-                  <strong className="text-slate-900 dark:text-white font-semibold">Problemas de Valor Inicial (P.V.I)</strong> mediante
-                  aproximaciones de primer orden por recta tangente.
-                </p>
-
-                <div className="pt-2">
-                  <div className="inline-flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 border-l-4 !border-l-indigo-600 text-xs sm:text-sm text-slate-800 dark:text-slate-200 max-w-full overflow-x-auto no-scrollbar shadow-2xs">
-                    <span className="font-bold text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      Esquema Iterativo:
-                    </span>
-                    <MathInline math="y_{n+1} = y_n + h \cdot f(x_n, y_n) \quad \text{con } y(x_0) = y_0" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Navegación "Documento Técnico" - Pestañas Planas con Toggle de Visualización */}
+        {/* Navegación superior fija minimalista */}
         <HorizontalMenuBar
           activeSection={activeSection}
           onNavigate={scrollTo}
@@ -163,15 +117,49 @@ export default function App() {
           onToggleTheme={() => setIsDarkMode((prev) => !prev)}
         />
 
-        {/* Main Content Sections */}
-        <main className="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-10 space-y-14 sm:space-y-20">
+        {/* Cabecera principal limpia y aireada */}
+        <header className="border-b border-slate-200/70 dark:border-slate-800/70 bg-white/60 dark:bg-slate-900/40 backdrop-blur-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-11">
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+              <div className="space-y-3 max-w-3xl">
+                <div className="inline-flex items-center gap-2 text-xs font-semibold text-indigo-700 dark:text-indigo-400">
+                  <GraduationCap className="w-4 h-4" />
+                  <span>UTN FRLP · Análisis Numérico</span>
+                </div>
+
+                <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
+                  Método de Euler para{' '}
+                  <span className="text-indigo-700 dark:text-indigo-400">
+                    Ecuaciones Diferenciales
+                  </span>
+                </h1>
+
+                <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base leading-relaxed">
+                  Resolución numérica e interpretación geométrica de Problemas de Valor Inicial (P.V.I) mediante aproximación tangencial de primer orden.
+                </p>
+              </div>
+
+              <div className="shrink-0">
+                <div className="inline-flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/70 text-xs sm:text-sm">
+                  <span className="font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[10px]">
+                    Recurrencia
+                  </span>
+                  <MathInline math="y_{n+1} = y_n + h \cdot f(x_n, y_n)" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Secciones principales con espaciado generoso */}
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-16 sm:space-y-24">
           {/* 1. Marco Teórico */}
           <Theory
             onGoToCalculator={() => scrollTo('calculadora')}
             onGoToExample={() => scrollTo('ejemplo-practico')}
           />
 
-          {/* 2. Marco Práctico */}
+          {/* 2. Ejemplo Práctico */}
           <PracticalExample
             onLoadExampleIntoCalculator={(params) => {
               setCalculatorPreset(params);
@@ -179,28 +167,23 @@ export default function App() {
             }}
           />
 
-          {/* 3. Calculadora Resolvedora y Gráfico */}
+          {/* 3. Calculadora y Gráfico */}
           <Calculator initialValues={calculatorPreset} />
 
-          {/* 4. Ejercicios de la Guía Práctica UTN */}
+          {/* 4. Guía de Ejercicios UTN */}
           <ExercisesGuide onSelectExercise={handleSelectExercise} />
         </main>
 
-        {/* Academic Footer */}
-        <footer className="border-t border-slate-200/70 dark:border-slate-800/70 bg-white/50 dark:bg-slate-950/40 backdrop-blur-md text-slate-600 dark:text-slate-400 py-10 px-4 sm:px-6 lg:px-8 mt-16 text-xs transition-colors">
-          <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="text-center md:text-left">
-              <p className="text-slate-900 dark:text-white font-bold text-sm">
-                Método de Euler para Ecuaciones Diferenciales Ordinarias (EDO)
-              </p>
-              <p className="text-slate-500 dark:text-slate-400 mt-0.5">
-                Cátedra de Análisis Numérico | UTN FRLP
-              </p>
-            </div>
+        {/* Pie de página sobrio */}
+        <footer className="border-t border-slate-200/70 dark:border-slate-800/70 bg-white/40 dark:bg-slate-950/40 text-slate-500 dark:text-slate-400 py-8 px-4 sm:px-6 lg:px-8 mt-12 text-xs">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p className="font-semibold text-slate-700 dark:text-slate-300">
+              Método de Euler · Ecuaciones Diferenciales Ordinarias
+            </p>
+            <p>Cátedra de Análisis Numérico · UTN FRLP</p>
           </div>
         </footer>
       </div>
     </ThemeProvider>
   );
 }
-

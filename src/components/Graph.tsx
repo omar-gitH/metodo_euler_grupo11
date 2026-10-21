@@ -29,6 +29,7 @@ import {
   SkipForward,
   Sliders,
   Wand2,
+  Sparkles,
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
@@ -152,6 +153,53 @@ const GraphCanvas: React.FC<GraphProps> = ({
     }, 220);
     return () => clearInterval(timer);
   }, [isPlaying, steps.length]);
+
+  // ---------- Animación de Generación Progresiva (Solución, Exacta y Error) ----------
+  const [animProgress, setAnimProgress] = useState<number>(1);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const animRafRef = useRef<number | null>(null);
+
+  const triggerGenerationAnimation = useCallback(() => {
+    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      setAnimProgress(1);
+      setIsGenerating(false);
+      return;
+    }
+    if (animRafRef.current) cancelAnimationFrame(animRafRef.current);
+    setIsGenerating(true);
+    setAnimProgress(0);
+
+    const start = performance.now();
+    const duration = 1000;
+
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const t = Math.min(1, elapsed / duration);
+      // Easing cúbico desacelerado para acabado fluido
+      const eased = 1 - Math.pow(1 - t, 3);
+      setAnimProgress(eased);
+
+      if (t < 1) {
+        animRafRef.current = requestAnimationFrame(tick);
+      } else {
+        setIsGenerating(false);
+        setAnimProgress(1);
+      }
+    };
+
+    animRafRef.current = requestAnimationFrame(tick);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (animRafRef.current) cancelAnimationFrame(animRafRef.current);
+    };
+  }, []);
+
+  // Activar animación al cambiar pasos o al cambiar de pestaña (Solución vs Error)
+  useEffect(() => {
+    triggerGenerationAnimation();
+  }, [steps, tab, triggerGenerationAnimation]);
 
   // ---------- Datos ----------
   const points = useMemo<ChartPoint[]>(
@@ -756,7 +804,7 @@ const GraphCanvas: React.FC<GraphProps> = ({
                 <button
                   type="button"
                   onClick={onTogglePanel}
-                  className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-all cursor-pointer shadow-2xs group shrink-0"
+                  className="hidden lg:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-all cursor-pointer shadow-2xs group shrink-0"
                   title="Ingresar variables y ecuación diferencial"
                   aria-label="Ingresar variables y ecuación"
                 >
@@ -773,6 +821,12 @@ const GraphCanvas: React.FC<GraphProps> = ({
                   ? 'Trayectoria numérica en el plano (x, y)'
                   : 'Evolución del error absoluto |y_exacta − y_Euler|'}
               </h3>
+              {isGenerating && (
+                <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80 animate-pulse">
+                  <Sparkles className="w-3 h-3 text-indigo-500" />
+                  Trazando {tab === 'solution' ? 'solución...' : 'error...'}
+                </span>
+              )}
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
               <span>
@@ -917,6 +971,16 @@ const GraphCanvas: React.FC<GraphProps> = ({
             >
               <RotateCcw className="w-4 h-4" />
             </button>
+            <button
+              type="button"
+              onClick={triggerGenerationAnimation}
+              disabled={isGenerating}
+              className={`${toolBtn} ${isGenerating ? toolBtnOn : ''}`}
+              title="Reproducir animación de trazado (iteraciones, analítica y error)"
+              aria-label="Reproducir animación de trazado"
+            >
+              <Play className={`w-4 h-4 ${isGenerating ? 'animate-pulse text-indigo-500' : ''}`} />
+            </button>
             <span className="w-px h-5 bg-slate-300/70 dark:bg-slate-600/70 mx-0.5" />
             <button
               onClick={() => setFullscreen((f) => !f)}
@@ -963,6 +1027,15 @@ const GraphCanvas: React.FC<GraphProps> = ({
               <clipPath id={`clip-${uid}`}>
                 <rect x={m.l} y={m.t} width={pw} height={ph} />
               </clipPath>
+              {/* Máscara de recorte animada de izquierda a derecha */}
+              <clipPath id={`anim-reveal-${uid}`}>
+                <rect
+                  x={m.l - 4}
+                  y={m.t - 8}
+                  width={Math.max(0, pw * animProgress + 6)}
+                  height={ph + 16}
+                />
+              </clipPath>
               <linearGradient id={`area-${uid}`} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={mainColor} stopOpacity={dark ? 0.32 : 0.22} />
                 <stop offset="60%" stopColor={mainColor} stopOpacity={dark ? 0.08 : 0.04} />
@@ -1004,61 +1077,104 @@ const GraphCanvas: React.FC<GraphProps> = ({
             )}
 
             <g clipPath={`url(#clip-${uid})`}>
-              {areaPath && <path d={areaPath} fill={`url(#area-${uid})`} />}
+              {/* Contenido animado con máscara de revelado de izquierda a derecha */}
+              <g clipPath={animProgress < 1 ? `url(#anim-reveal-${uid})` : undefined}>
+                {areaPath && <path d={areaPath} fill={`url(#area-${uid})`} />}
 
-              {exactPts && exactPts.length > 0 && (
-                <path
-                  d={toPath(exactPts)}
-                  fill="none"
-                  stroke={C.exact}
-                  strokeWidth={2.4}
-                  strokeDasharray="7 5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              )}
-
-              {showSplineFit && tab === 'solution' && splinePath && (
-                <path
-                  d={splinePath}
-                  fill="none"
-                  stroke={dark ? '#38bdf8' : '#0284c7'}
-                  strokeWidth={2.4}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              )}
-
-              <path
-                d={mainPath}
-                fill="none"
-                stroke={mainColor}
-                strokeWidth={2.6}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-
-              {drawNodes &&
-                mainPts.map((p, i) =>
-                  p.y == null ? null : (
-                    <g key={i}>
-                      <circle
-                        cx={sxOf(p.x)}
-                        cy={safeY(p.y)}
-                        r={compact ? 3.5 : 4.5}
-                        fill={C.node}
-                        stroke={mainColor}
-                        strokeWidth={compact ? 1.8 : 2.2}
-                      />
-                      <circle
-                        cx={sxOf(p.x)}
-                        cy={safeY(p.y)}
-                        r={compact ? 1.2 : 1.5}
-                        fill={mainColor}
-                      />
-                    </g>
-                  )
+                {exactPts && exactPts.length > 0 && (
+                  <path
+                    d={toPath(exactPts)}
+                    fill="none"
+                    stroke={C.exact}
+                    strokeWidth={2.4}
+                    strokeDasharray="7 5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 )}
+
+                {showSplineFit && tab === 'solution' && splinePath && (
+                  <path
+                    d={splinePath}
+                    fill="none"
+                    stroke={dark ? '#38bdf8' : '#0284c7'}
+                    strokeWidth={2.4}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                )}
+
+                <path
+                  d={mainPath}
+                  fill="none"
+                  stroke={mainColor}
+                  strokeWidth={2.6}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+
+                {drawNodes &&
+                  mainPts.map((p, i) =>
+                    p.y == null ? null : (
+                      <g key={i}>
+                        <circle
+                          cx={sxOf(p.x)}
+                          cy={safeY(p.y)}
+                          r={compact ? 3.5 : 4.5}
+                          fill={C.node}
+                          stroke={mainColor}
+                          strokeWidth={compact ? 1.8 : 2.2}
+                        />
+                        <circle
+                          cx={sxOf(p.x)}
+                          cy={safeY(p.y)}
+                          r={compact ? 1.2 : 1.5}
+                          fill={mainColor}
+                        />
+                      </g>
+                    )
+                  )}
+              </g>
+
+              {/* Indicador de barrido dinámico durante la generación progresiva */}
+              {isGenerating && animProgress < 0.99 && (
+                <g pointerEvents="none">
+                  <line
+                    x1={m.l + pw * animProgress}
+                    y1={m.t}
+                    x2={m.l + pw * animProgress}
+                    y2={plotBottom}
+                    stroke={mainColor}
+                    strokeWidth={1.5}
+                    strokeDasharray="3 3"
+                    strokeOpacity={0.4}
+                  />
+                  <circle
+                    cx={m.l + pw * animProgress}
+                    cy={safeY(
+                      tab === 'solution'
+                        ? (activePoints[Math.min(activePoints.length - 1, Math.floor(animProgress * activePoints.length))]?.euler ?? 0)
+                        : (activePoints[Math.min(activePoints.length - 1, Math.floor(animProgress * activePoints.length))]?.err ?? 0)
+                    )}
+                    r={7}
+                    fill={mainColor}
+                    fillOpacity={0.35}
+                    className="animate-ping"
+                  />
+                  <circle
+                    cx={m.l + pw * animProgress}
+                    cy={safeY(
+                      tab === 'solution'
+                        ? (activePoints[Math.min(activePoints.length - 1, Math.floor(animProgress * activePoints.length))]?.euler ?? 0)
+                        : (activePoints[Math.min(activePoints.length - 1, Math.floor(animProgress * activePoints.length))]?.err ?? 0)
+                    )}
+                    r={4}
+                    fill={mainColor}
+                    stroke="#ffffff"
+                    strokeWidth={1.5}
+                  />
+                </g>
+              )}
 
               {/* Baliza del nodo activo alcanzado en la iteración visible */}
               {activePoints.length > 0 && (
@@ -1701,12 +1817,12 @@ const GraphCanvas: React.FC<GraphProps> = ({
             </div>
           )}
 
-          {/* Badge Informativo de la Iteración Actual */}
-          {activePoints.length > 0 && (
-            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 pt-2 border-t border-slate-200/70 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-300 font-medium">
+          {/* Badge Informativo Compacto */}
+          {activePoints.length > 0 && visibleStep < totalStepsCount && (
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200/70 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-300">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span>
-                  Nodo actual: <strong className="font-mono text-indigo-600 dark:text-indigo-400 font-bold">n = {activePoints[activePoints.length - 1].n}</strong>
+                  Nodo: <strong className="font-mono text-indigo-600 dark:text-indigo-400">n = {activePoints[activePoints.length - 1].n}</strong>
                 </span>
                 <span>·</span>
                 <span>
@@ -1714,18 +1830,10 @@ const GraphCanvas: React.FC<GraphProps> = ({
                 </span>
                 <span>·</span>
                 <span>
-                  y_Euler = <strong className="font-mono text-indigo-600 dark:text-indigo-400 font-bold">{formatNum(activePoints[activePoints.length - 1].euler, 6)}</strong>
-                </span>
-                <span>·</span>
-                <span>
-                  f(x,y) = <strong className="font-mono text-amber-600 dark:text-amber-400">{formatNum(activePoints[activePoints.length - 1].slope, 4)}</strong>
+                  y_Euler = <strong className="font-mono text-indigo-600 dark:text-indigo-400">{formatNum(activePoints[activePoints.length - 1].euler, 6)}</strong>
                 </span>
                 {activePoints[activePoints.length - 1].exact != null && (
                   <>
-                    <span>·</span>
-                    <span>
-                      y_exacta = <strong className="font-mono text-emerald-600 dark:text-emerald-400">{formatNum(activePoints[activePoints.length - 1].exact!, 6)}</strong>
-                    </span>
                     <span>·</span>
                     <span>
                       Error = <strong className="font-mono text-rose-600 dark:text-rose-400">{formatNum(activePoints[activePoints.length - 1].err ?? 0, 6)}</strong>
@@ -1733,32 +1841,17 @@ const GraphCanvas: React.FC<GraphProps> = ({
                   </>
                 )}
               </div>
-
-              {visibleStep < totalStepsCount && (
-                <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-800">
-                  Visualización parcial (Paso {visibleStep} / {totalStepsCount})
-                </span>
-              )}
+              <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-800">
+                Paso {visibleStep} / {totalStepsCount}
+              </span>
             </div>
           )}
         </div>
 
-        {/* Pie */}
-        <div className="flex flex-col gap-2.5">
-          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-            <strong className="text-slate-700 dark:text-slate-200">Navegación:</strong> arrastrá para mover ·{' '}
-            <kbd className="kbd">Ctrl</kbd> + rueda o pellizco para el zoom · <kbd className="kbd">Shift</kbd> + arrastrar para
-            ampliar un área · doble clic para restablecer · podés estirar el borde inferior para cambiar la altura.
-          </p>
-          <div className="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-300 bg-indigo-50/70 dark:bg-indigo-950/30 p-3.5 rounded-xl border border-indigo-100 dark:border-indigo-900/50">
-            <Info className="w-4 h-4 text-indigo-500 dark:text-indigo-400 shrink-0 mt-0.5" />
-            <span>
-              <strong>Interpretación geométrica:</strong> los segmentos poligonales entre nodos ilustran el avance a lo largo de la
-              recta tangente. La discrepancia entre la poligonal y la trayectoria analítica cuantifica el error numérico acumulado{' '}
-              <MathInline math="\mathcal{O}(h)" />.
-            </span>
-          </div>
-        </div>
+        {/* Pie compacto de navegación */}
+        <p className="text-[11px] text-slate-400 dark:text-slate-500">
+          Arrastrá para mover · <kbd className="kbd">Ctrl</kbd> + rueda para zoom · <kbd className="kbd">Shift</kbd> + arrastrar para ampliar área · doble clic para centrar.
+        </p>
       </div>
     </div>
   );
