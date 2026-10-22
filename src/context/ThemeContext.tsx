@@ -44,7 +44,32 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   }, [isDarkMode]);
 
   const toggleTheme = () => {
-    setIsDarkMode((prev) => !prev);
+    const nextMode = !isDarkMode;
+
+    const applyTheme = () => {
+      const root = document.documentElement;
+      if (nextMode) {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+      setIsDarkMode(nextMode);
+      try {
+        localStorage.setItem('euler_theme', nextMode ? 'dark' : 'light');
+      } catch {
+        // Ignorar si el almacenamiento local está restringido
+      }
+    };
+
+    // Si el navegador soporta View Transitions (Chrome 111+, Edge, Safari 18+),
+    // la GPU interpola el lienzo completo a 60/120 fps sin forzar reflows ni repaints de tarjetas
+    if (typeof document !== 'undefined' && 'startViewTransition' in document) {
+      (document as unknown as { startViewTransition: (cb: () => void) => void }).startViewTransition(() => {
+        applyTheme();
+      });
+    } else {
+      applyTheme();
+    }
   };
 
   return (

@@ -20,22 +20,22 @@ export const Theory: React.FC<TheoryProps> = ({ onGoToExample }) => {
 
   return (
     <section id="teoria" className="space-y-8 scroll-mt-20">
-      {/* Encabezado de sección limpio */}
-      <div className="space-y-2">
-        <div className="inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-semibold text-xs uppercase tracking-wider">
+      {/* Encabezado de sección con eyebrow académico */}
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1">
           <BookOpen className="w-4 h-4" />
-          <span>1. Marco Teórico</span>
+          <span>1. MARCO TEÓRICO Y FORMULACIÓN</span>
         </div>
         <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           Fundamento del Método de Euler
         </h2>
-        <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base max-w-3xl leading-relaxed">
+        <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed max-w-3xl">
           Un método de paso simple que aproxima la solución de una ecuación diferencial avanzando paso a paso a través de rectas tangentes, ya que muchas ecuaciones de ingeniería no pueden resolverse de forma analítica exacta.
         </p>
       </div>
 
       {/* Tarjeta 1: Los 4 ingredientes del P.V.I + Ordenada Genérica */}
-      <div className="surface p-6 sm:p-8 space-y-8">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm p-6 sm:p-8 space-y-8">
         <div className="space-y-4">
           <h3 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Los 4 ingredientes del Problema de Valor Inicial (P.V.I)
@@ -174,7 +174,7 @@ export const Theory: React.FC<TheoryProps> = ({ onGoToExample }) => {
       <EulerStepDiagram />
 
       {/* Análisis del Error y Origen por Serie de Taylor */}
-      <div className="surface overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
         <button
           type="button"
           onClick={() => setIsErrorAccordionOpen((prev) => !prev)}

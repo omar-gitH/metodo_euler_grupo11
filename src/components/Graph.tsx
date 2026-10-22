@@ -8,6 +8,7 @@ import React, {
   useState,
 } from 'react';
 import { EulerStep, createExactEvaluator, formatNum } from '../utils/euler';
+import { MAX_ITERATIONS } from '../utils/constants';
 import { MathInline } from './MathView';
 import {
   TrendingUp,
@@ -139,9 +140,10 @@ const GraphCanvas: React.FC<GraphProps> = ({
     setIsPlaying(false);
   }, [steps]);
 
-  // Reproducción automática paso a paso
+  // Reproducción automática paso a paso (velocidad adaptada a N: ~4–16 s en total)
   useEffect(() => {
     if (!isPlaying) return;
+    const intervalMs = Math.max(16, Math.min(220, 4000 / Math.max(1, steps.length)));
     const timer = setInterval(() => {
       setVisibleStep((prev) => {
         if (prev >= steps.length - 1) {
@@ -150,7 +152,7 @@ const GraphCanvas: React.FC<GraphProps> = ({
         }
         return prev + 1;
       });
-    }, 220);
+    }, intervalMs);
     return () => clearInterval(timer);
   }, [isPlaying, steps.length]);
 
@@ -170,7 +172,7 @@ const GraphCanvas: React.FC<GraphProps> = ({
     setAnimProgress(0);
 
     const start = performance.now();
-    const duration = 1000;
+    const duration = 380;
 
     const tick = (now: number) => {
       const elapsed = now - start;
@@ -196,10 +198,10 @@ const GraphCanvas: React.FC<GraphProps> = ({
     };
   }, []);
 
-  // Activar animación al cambiar pasos o al cambiar de pestaña (Solución vs Error)
+  // Activar animación al cambiar pasos (nuevo cálculo), sin trabar el cambio instantáneo de pestañas
   useEffect(() => {
     triggerGenerationAnimation();
-  }, [steps, tab, triggerGenerationAnimation]);
+  }, [steps, triggerGenerationAnimation]);
 
   // ---------- Datos ----------
   const points = useMemo<ChartPoint[]>(
@@ -846,7 +848,7 @@ const GraphCanvas: React.FC<GraphProps> = ({
                 role="tab"
                 aria-selected={tab === 'solution'}
                 onClick={() => setActiveTab('solution')}
-                className={tab === 'solution' ? 'segmented-on' : ''}
+                className={`transition-all duration-200 cursor-pointer ${tab === 'solution' ? 'segmented-on' : ''}`}
               >
                 Solución y(x)
               </button>
@@ -854,7 +856,7 @@ const GraphCanvas: React.FC<GraphProps> = ({
                 role="tab"
                 aria-selected={tab === 'error'}
                 onClick={() => setActiveTab('error')}
-                className={tab === 'error' ? 'segmented-on segmented-on-warn' : ''}
+                className={`transition-all duration-200 cursor-pointer ${tab === 'error' ? 'segmented-on segmented-on-warn' : ''}`}
               >
                 Curva de error
               </button>
@@ -1778,9 +1780,9 @@ const GraphCanvas: React.FC<GraphProps> = ({
                 <input
                   type="range"
                   min="2"
-                  max="100"
+                  max={MAX_ITERATIONS}
                   step="1"
-                  value={totalStepsCount}
+                  value={Math.min(totalStepsCount, MAX_ITERATIONS)}
                   onChange={(e) => {
                     const newN = Number(e.target.value);
                     onIterationsCountChange?.(newN);
@@ -1793,13 +1795,13 @@ const GraphCanvas: React.FC<GraphProps> = ({
                   <span className="font-bold text-indigo-600 dark:text-indigo-400 font-sans">
                     N = {totalStepsCount} pasos
                   </span>
-                  <span>N = 100 (alta resolución)</span>
+                  <span>N = {MAX_ITERATIONS} (máximo)</span>
                 </div>
               </div>
 
               {/* Botones rápidos de N */}
               <div className="flex items-center gap-1.5 shrink-0 overflow-x-auto no-scrollbar">
-                {[5, 10, 20, 50, 100].map((presetN) => (
+                {[10, 50, 100, 250, 500, MAX_ITERATIONS].map((presetN) => (
                   <button
                     key={presetN}
                     type="button"

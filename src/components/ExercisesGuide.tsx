@@ -10,26 +10,26 @@ interface ExercisesGuideProps {
 export const ExercisesGuide: React.FC<ExercisesGuideProps> = ({ onSelectExercise }) => {
   return (
     <section id="ejercicios-guia" className="space-y-6 scroll-mt-20">
-      {/* Encabezado de sección */}
-      <div className="space-y-2">
-        <div className="inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-semibold text-xs uppercase tracking-wider">
+      {/* Encabezado de sección con eyebrow académico */}
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1">
           <GraduationCap className="w-4 h-4" />
-          <span>4. Práctica Universitaria</span>
+          <span>4. CATÁLOGO DE EJERCICIOS DE LA GUÍA</span>
         </div>
         <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           Ejercicios de la Guía Oficial (UTN FRLP)
         </h2>
-        <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base max-w-3xl">
+        <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed max-w-3xl">
           Seleccioná cualquier problema de la guía de trabajos prácticos para cargarlo automáticamente en la calculadora y analizar su curva.
         </p>
       </div>
 
-      {/* Grilla limpia de ejercicios */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {/* Grilla limpia de ejercicios en cards tipo reporte técnico */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
         {GUIDE_EXERCISES.map((ex, idx) => (
           <div
             key={ex.id}
-            className="surface p-5 flex flex-col justify-between gap-4 hover:-translate-y-0.5 transition-all duration-200 group"
+            className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm p-4 sm:p-5 flex flex-col justify-between gap-4 hover:-translate-y-0.5 transition-all duration-200 group"
           >
             <div className="space-y-3.5">
               <div className="flex items-center justify-between gap-2">

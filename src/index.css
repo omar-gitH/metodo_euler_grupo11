@@ -55,8 +55,8 @@
 :root {
   --surface: #ffffff;
   --surface-border: #e2e8f0;
-  --surface-shadow: 0 1px 3px rgb(15 23 42 / 0.04), 0 8px 24px -12px rgb(15 23 42 / 0.08);
-  --surface-shadow-hover: 0 2px 6px rgb(15 23 42 / 0.06), 0 14px 30px -12px rgb(15 23 42 / 0.14);
+  --surface-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7), 0 1px 3px rgb(15 23 42 / 0.04), 0 8px 24px -12px rgb(15 23 42 / 0.08);
+  --surface-shadow-hover: inset 0 1px 0 rgb(255 255 255 / 0.7), 0 3px 8px rgb(15 23 42 / 0.06), 0 14px 30px -10px rgb(15 23 42 / 0.12);
   --ink: #0f172a;
   --ink-soft: #475569;
   --accent: #1e487e;
@@ -64,10 +64,10 @@
 }
 
 :root.dark {
-  --surface: #0f172a;
+  --surface: #0b1324;
   --surface-border: #1e293b;
-  --surface-shadow: 0 1px 3px rgb(0 0 0 / 0.35), 0 10px 24px -12px rgb(0 0 0 / 0.65);
-  --surface-shadow-hover: 0 2px 6px rgb(0 0 0 / 0.4), 0 16px 34px -14px rgb(0 0 0 / 0.75);
+  --surface-shadow: inset 0 1px 0 rgb(255 255 255 / 0.03), 0 1px 3px rgb(0 0 0 / 0.4), 0 10px 28px -12px rgb(0 0 0 / 0.7);
+  --surface-shadow-hover: inset 0 1px 0 rgb(255 255 255 / 0.04), 0 3px 8px rgb(0 0 0 / 0.5), 0 16px 36px -12px rgb(0 0 0 / 0.8);
   --ink: #f8fafc;
   --ink-soft: #94a3b8;
   --accent: #8eb3de;
@@ -79,12 +79,52 @@ html {
   -webkit-text-size-adjust: 100%;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
+  scroll-padding-top: 4.5rem;
 }
 
 body {
   margin: 0;
   overflow-x: hidden;
   background: #f8fafc;
+}
+
+/* Transición nativa entre temas acelerada por GPU (View Transitions API) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Transiciones de tema fluidas aplicadas exclusivamente a superficies contenedor (sin saturar celdas, sombras ni fórmulas) */
+html,
+body,
+.app-bg,
+.surface,
+.field,
+.btn-soft,
+.segmented,
+.segmented button,
+header,
+nav,
+aside,
+footer {
+  transition:
+    background-color 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Exclusión crítica de rendimiento: jamás animar celdas de tablas masivas (hasta 1000 filas) ni spans de KaTeX */
+table,
+thead,
+tbody,
+tr,
+th,
+td,
+.katex,
+.katex * {
+  transition: none !important;
 }
 
 /* Títulos con tipografía moderna y de estilo editorial / académico */
@@ -94,18 +134,44 @@ h3 {
   letter-spacing: -0.015em;
 }
 
+/* Título principal y títulos de sección en serif académica (Source Serif 4) */
+h1,
+main > section h2 {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Filete institucional corto bajo cada título de sección */
+main > section h2::after {
+  content: '';
+  display: block;
+  width: 2.75rem;
+  height: 3px;
+  margin-top: 0.65rem;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--color-indigo-700), var(--color-sky-400));
+}
+
+.dark main > section h2::after {
+  background: linear-gradient(90deg, var(--color-indigo-400), var(--color-sky-300));
+}
+
 /* =========================================================
-   Fondo: papel cuadriculado milimétrico sutil y moderno
+   Fondo: papel cuadriculado milimétrico con fundido GPU bicapa
    ========================================================= */
 .app-bg {
   position: relative;
   isolation: isolate;
-  background:
-    radial-gradient(circle at 12% 0%, rgb(56 115 181 / 0.08), transparent 28rem),
-    radial-gradient(circle at 92% 18%, rgb(63 134 176 / 0.05), transparent 24rem),
-    #f8fafc;
+  background-color: #f8fafc;
+  transition: background-color 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.dark .app-bg {
+  background-color: #070d18;
+}
+
+/* Capa de malla para modo claro (se desvanece por opacidad GPU) */
 .app-bg::before {
   content: '';
   position: fixed;
@@ -113,24 +179,46 @@ h3 {
   z-index: -1;
   pointer-events: none;
   background-image:
+    radial-gradient(circle at 12% 0%, rgb(56 115 181 / 0.08), transparent 28rem),
+    radial-gradient(circle at 92% 18%, rgb(63 134 176 / 0.05), transparent 24rem),
     linear-gradient(rgb(30 72 126 / 0.04) 1px, transparent 1px),
     linear-gradient(90deg, rgb(30 72 126 / 0.04) 1px, transparent 1px);
-  background-size: 28px 28px;
+  background-size: auto, auto, 28px 28px, 28px 28px;
   -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 92%);
   mask-image: linear-gradient(to bottom, #000 0%, transparent 92%);
-}
-
-.dark .app-bg {
-  background:
-    radial-gradient(circle at 12% 0%, rgb(56 115 181 / 0.13), transparent 28rem),
-    radial-gradient(circle at 92% 18%, rgb(63 134 176 / 0.08), transparent 24rem),
-    #070d18;
+  will-change: opacity;
+  transform: translateZ(0);
+  transition: opacity 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 1;
 }
 
 .dark .app-bg::before {
+  opacity: 0;
+}
+
+/* Capa de malla para modo oscuro (aparece por opacidad GPU sin recompilar gradientes) */
+.app-bg::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background-image:
+    radial-gradient(circle at 12% 0%, rgb(56 115 181 / 0.14), transparent 28rem),
+    radial-gradient(circle at 92% 18%, rgb(63 134 176 / 0.09), transparent 24rem),
     linear-gradient(rgb(148 163 184 / 0.05) 1px, transparent 1px),
     linear-gradient(90deg, rgb(148 163 184 / 0.05) 1px, transparent 1px);
+  background-size: auto, auto, 28px 28px, 28px 28px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 92%);
+  mask-image: linear-gradient(to bottom, #000 0%, transparent 92%);
+  will-change: opacity;
+  transform: translateZ(0);
+  transition: opacity 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+}
+
+.dark .app-bg::after {
+  opacity: 1;
 }
 
 /* =========================================================
@@ -144,14 +232,14 @@ h3 {
   border-radius: 1rem;
   box-shadow: var(--surface-shadow);
   transition:
-    background-color 0.25s ease,
+    background-color 0.28s cubic-bezier(0.4, 0, 0.2, 1),
     box-shadow 0.25s ease,
-    border-color 0.25s ease,
-    transform 0.2s ease;
+    border-color 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .surface:hover {
-  border-color: rgba(92, 145, 204, 0.4);
+  border-color: rgba(92, 145, 204, 0.45);
 }
 
 /* Las tarjetas existentes (bg-white + rounded-lg) adoptan el mismo lenguaje visual */
@@ -160,7 +248,7 @@ main .rounded-lg.bg-white {
   border-color: var(--surface-border);
   border-radius: 1rem;
   box-shadow: var(--surface-shadow);
-  transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
+  transition: box-shadow 0.25s ease, border-color 0.3s ease, transform 0.2s ease;
 }
 
 main .rounded-lg.bg-white:hover {
@@ -182,7 +270,7 @@ main .rounded-lg.bg-white:hover {
 }
 
 .dark .glass-panel {
-  background: rgba(15, 23, 42, 0.85);
+  background: rgba(11, 19, 36, 0.88);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(30, 41, 59, 0.8);
@@ -224,8 +312,8 @@ main .rounded-lg.bg-white:hover {
 
 .field:focus {
   outline: none;
-  border-color: #255a9a;
-  box-shadow: 0 0 0 3px rgb(37 90 154 / 0.16);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
   background: #fff;
 }
 
@@ -238,6 +326,12 @@ main .rounded-lg.bg-white:hover {
 
 .dark .field:hover {
   border-color: #334155;
+}
+
+.dark .field:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35);
+  background: #0f172a;
 }
 
 .dark .field:focus {
@@ -431,6 +525,46 @@ input[type='range'] {
   accent-color: #2c4f8a;
 }
 
+/* Sliders personalizados (los que usan appearance-none) con pulgar sobrio */
+input[type='range'].appearance-none::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 2px solid var(--color-indigo-600);
+  box-shadow: 0 1px 3px rgb(15 23 42 / 0.25);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type='range'].appearance-none::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 2px solid var(--color-indigo-600);
+  box-shadow: 0 1px 3px rgb(15 23 42 / 0.25);
+  cursor: pointer;
+}
+
+input[type='range'].appearance-none:hover::-webkit-slider-thumb,
+input[type='range'].appearance-none:focus-visible::-webkit-slider-thumb {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 4px rgb(37 90 154 / 0.18);
+}
+
+.dark input[type='range'].appearance-none::-webkit-slider-thumb {
+  background: #0b1324;
+  border-color: var(--color-indigo-300);
+}
+
+.dark input[type='range'].appearance-none::-moz-range-thumb {
+  background: #0b1324;
+  border-color: var(--color-indigo-300);
+}
+
 /* =========================================================
    Academic Typography & KaTeX
    ========================================================= */
@@ -494,11 +628,20 @@ input[type='range'] {
 }
 
 :root:not(.dark) .katex {
-  color: #111827;
+  color: inherit;
 }
 
 :root.dark .katex {
-  color: #f8fafc;
+  color: inherit;
+}
+
+/* Regla universal para contenedores oscuros en modo claro: el texto matemático siempre hereda blanco */
+.dark-banner,
+.dark-banner .katex,
+.dark-banner .katex *,
+.text-white .katex,
+.text-white .katex * {
+  color: #ffffff !important;
 }
 
 /* Números tabulares en tablas para alinear cifras */
@@ -572,13 +715,6 @@ table {
   box-shadow: none;
 }
 
-/* Smooth transitions */
-html {
-  transition: background-color 0.2s ease, color 0.2s ease;
-  scroll-behavior: smooth;
-  scroll-padding-top: 4.5rem;
-}
-
 button {
   -webkit-tap-highlight-color: transparent;
 }
@@ -597,29 +733,19 @@ button:active {
   outline-color: var(--focus-ring);
 }
 
-/* NOTA: `backwards` (no `both`) evita que el transform residual rompa el
-   posicionamiento fixed del gráfico en pantalla completa. */
 main > section {
-  animation: section-enter 0.45s ease backwards;
   scroll-margin-top: 4.5rem;
 }
 
-main > section:nth-child(2) {
-  animation-delay: 0.05s;
+/* Transición ultra-fluida al cambiar de modo de vista o pestaña */
+.view-fade-enter {
+  animation: view-fade 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-main > section:nth-child(3) {
-  animation-delay: 0.1s;
-}
-
-main > section:nth-child(4) {
-  animation-delay: 0.15s;
-}
-
-@keyframes section-enter {
+@keyframes view-fade {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(3px);
   }
   to {
     opacity: 1;
@@ -642,4 +768,44 @@ main > section:nth-child(4) {
   .surface:hover {
     box-shadow: var(--surface-shadow-hover);
   }
+}
+
+/* =========================================================
+   Estilos y micro-animaciones modernas y sobrias
+   ========================================================= */
+.tab-pill-active {
+  background: linear-gradient(135deg, #1e487e, #255a9a);
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px -2px rgba(30, 72, 126, 0.35);
+}
+
+.dark .tab-pill-active {
+  background: linear-gradient(135deg, #255a9a, #1b3d68);
+  color: #ffffff !important;
+  box-shadow: 0 4px 16px -2px rgba(92, 145, 204, 0.25);
+}
+
+.step-card-active {
+  border-color: rgba(92, 145, 204, 0.65) !important;
+  box-shadow: 0 8px 20px -4px rgba(30, 72, 126, 0.1);
+}
+
+.dark .step-card-active {
+  border-color: rgba(142, 179, 222, 0.45) !important;
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.45);
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 0.95;
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 4s ease-in-out infinite;
 }

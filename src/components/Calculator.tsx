@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useId } from 'react';
 import { computeEuler, EulerResult, exprToLatex, formatNum } from '../utils/euler';
+import { MAX_ITERATIONS, estimateIterations } from '../utils/constants';
 import { GUIDE_EXERCISES, GuideExercise } from '../data/exercises';
 import { MathInline } from './MathView';
 import { Graph } from './Graph';
@@ -40,12 +41,14 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
   const [showAdvancedExact, setShowAdvancedExact] = useState<boolean>(true);
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
   const [activeMobileKeypadField, setActiveMobileKeypadField] = useState<'fn' | 'exact' | null>(null);
+  const [initialKeypadCursor, setInitialKeypadCursor] = useState<number | undefined>(undefined);
 
   const [result, setResult] = useState<EulerResult | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
   const [activeExerciseId, setActiveExerciseId] = useState<string>('utn-2a');
   const [showAllStepsBreakdown, setShowAllStepsBreakdown] = useState<boolean>(false);
   const [visibleIterationsLimit, setVisibleIterationsLimit] = useState<number | null>(null);
+  const [showAllRows, setShowAllRows] = useState<boolean>(false);
 
   // Redimensionar el canvas/SVG del gráfico al abrir o colapsar el panel lateral
   useEffect(() => {
@@ -85,6 +88,24 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
       return;
     }
 
+    const estimatedN = estimateIterations(x0, xf, h);
+    if (estimatedN > MAX_ITERATIONS) {
+      const minH = (xf - x0) / MAX_ITERATIONS;
+      setResult({
+        steps: [],
+        success: false,
+        error: `El paso h = ${h} generaría ${estimatedN} iteraciones. El máximo permitido es ${MAX_ITERATIONS}: usá h ≥ ${formatNum(minH, 6)}.`,
+        expressionSanitized: fnInput,
+        expressionLatex: exprToLatex(fnInput),
+        totalIterations: 0,
+        h,
+        x0,
+        y0,
+        xf,
+      });
+      return;
+    }
+
     const res = computeEuler({
       expr: fnInput,
       x0,
@@ -92,6 +113,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
       h,
       xf,
       exactExpr: showAdvancedExact ? exactInput : '',
+      maxIterations: MAX_ITERATIONS,
     });
 
     setResult(res);
@@ -135,6 +157,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
       h: ex.h,
       xf: ex.xf,
       exactExpr: ex.exactFormula || '',
+      maxIterations: MAX_ITERATIONS,
     });
     setResult(res);
   };
@@ -143,6 +166,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
     const curH = parseFloat(hInput);
     if (!isNaN(curH) && curH > 0) {
       const newH = Number((curH / 2).toFixed(6));
+      if (estimateIterations(parseFloat(x0Input), parseFloat(xfInput), newH) > MAX_ITERATIONS) return;
       setHInput(String(newH));
       const res = computeEuler({
         expr: fnInput,
@@ -151,12 +175,14 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
         h: newH,
         xf: parseFloat(xfInput),
         exactExpr: showAdvancedExact ? exactInput : '',
+        maxIterations: MAX_ITERATIONS,
       });
       setResult(res);
     }
   };
 
-  const handleIterationsCountChange = (newN: number) => {
+  const handleIterationsCountChange = (requestedN: number) => {
+    const newN = Math.min(MAX_ITERATIONS, Math.round(requestedN));
     const x0 = parseFloat(x0Input);
     const xf = parseFloat(xfInput);
     const y0 = parseFloat(y0Input);
@@ -177,9 +203,16 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
       h: newH,
       xf,
       exactExpr: showAdvancedExact ? exactInput : '',
+      maxIterations: MAX_ITERATIONS,
     });
     setResult(res);
   };
+
+  const canHalveStep = (() => {
+    const curH = parseFloat(hInput);
+    if (isNaN(curH) || curH <= 0) return false;
+    return estimateIterations(parseFloat(x0Input), parseFloat(xfInput), curH / 2) <= MAX_ITERATIONS;
+  })();
 
   const handleExportCSV = () => {
     if (!result || result.steps.length === 0) return;
@@ -239,26 +272,28 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
     visibleIterationsLimit !== null && visibleIterationsLimit <= maxStepIndex
       ? visibleIterationsLimit
       : maxStepIndex;
-  const stepsToRender = result ? result.steps.slice(0, currentStepLimit + 1) : [];
+  const allStepsToRender = result ? result.steps.slice(0, currentStepLimit + 1) : [];
+  const isLargeTable = allStepsToRender.length > 100;
+  const stepsToRender = isLargeTable && !showAllRows ? allStepsToRender.slice(0, 100) : allStepsToRender;
 
   return (
     <section id="calculadora" className="euler-calculator space-y-6 scroll-mt-20">
-      {/* Encabezado limpio de la sección */}
-      <div className="space-y-2">
-        <div className="inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-semibold text-xs uppercase tracking-wider">
+      {/* Encabezado con eyebrow académico */}
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1">
           <CalcIcon className="w-4 h-4" />
-          <span>3. Simulador Interactivo</span>
+          <span>3. SIMULADOR INTERACTIVO Y GRÁFICA 2D</span>
         </div>
         <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           Calculadora y Gráfico 2D
         </h2>
-        <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base max-w-3xl">
+        <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed max-w-3xl">
           Ingresá la ecuación diferencial y el paso <MathInline math="h" /> para visualizar la trayectoria numérica, la curva exacta y la evolución del error.
         </p>
       </div>
 
       {/* Contenedor Principal: Panel Lateral de Variables + Gráfico 2D */}
-      <div className="surface overflow-hidden relative">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden relative">
         {/* Barra superior de control para móviles y tablets (< 1024px) */}
         <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -349,7 +384,10 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                   </label>
                   <button
                     type="button"
-                    onClick={() => setActiveMobileKeypadField('fn')}
+                    onClick={() => {
+                      setInitialKeypadCursor(fnInput.length);
+                      setActiveMobileKeypadField('fn');
+                    }}
                     className="lg:hidden inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 rounded-lg px-2 py-0.5 hover:bg-indigo-100 transition-colors cursor-pointer"
                   >
                     <CalcIcon className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
@@ -362,13 +400,15 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                   type="text"
                   value={fnInput}
                   onChange={(e) => setFnInput(e.target.value)}
-                  onFocus={() => {
+                  onFocus={(e) => {
                     if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                      setInitialKeypadCursor(e.currentTarget.selectionStart ?? fnInput.length);
                       setActiveMobileKeypadField('fn');
                     }
                   }}
-                  onClick={() => {
+                  onClick={(e) => {
                     if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                      setInitialKeypadCursor(e.currentTarget.selectionStart ?? fnInput.length);
                       setActiveMobileKeypadField('fn');
                     }
                   }}
@@ -446,8 +486,9 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                       <button
                         type="button"
                         onClick={handleHalveStep}
-                        className="text-[10px] px-1.5 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-semibold hover:bg-indigo-100 cursor-pointer"
-                        title="Reducir paso a la mitad"
+                        disabled={!canHalveStep}
+                        className="text-[10px] px-1.5 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-semibold hover:bg-indigo-100 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                        title={canHalveStep ? 'Reducir paso a la mitad' : `Reducir h superaría el máximo de ${MAX_ITERATIONS} iteraciones`}
                       >
                         h/2
                       </button>
@@ -459,7 +500,11 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                       value={hInput}
                       onChange={(e) => setHInput(e.target.value)}
                       className="field !text-xs !py-1.5"
+                      aria-describedby={`${hInputId}-hint`}
                     />
+                    <span id={`${hInputId}-hint`} className="block mt-1 text-[10px] text-slate-400 dark:text-slate-500">
+                      Máx. {MAX_ITERATIONS} iteraciones
+                    </span>
                   </div>
                   <div>
                     <label htmlFor={xfInputId} className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
@@ -491,7 +536,10 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                   {showAdvancedExact && (
                     <button
                       type="button"
-                      onClick={() => setActiveMobileKeypadField('exact')}
+                      onClick={() => {
+                        setInitialKeypadCursor(exactInput.length);
+                        setActiveMobileKeypadField('exact');
+                      }}
                       className="lg:hidden inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 rounded-lg px-2 py-0.5 cursor-pointer"
                     >
                       <CalcIcon className="w-3 h-3" />
@@ -506,13 +554,15 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                     type="text"
                     value={exactInput}
                     onChange={(e) => setExactInput(e.target.value)}
-                    onFocus={() => {
+                    onFocus={(e) => {
                       if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                        setInitialKeypadCursor(e.currentTarget.selectionStart ?? exactInput.length);
                         setActiveMobileKeypadField('exact');
                       }
                     }}
-                    onClick={() => {
+                    onClick={(e) => {
                       if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                        setInitialKeypadCursor(e.currentTarget.selectionStart ?? exactInput.length);
                         setActiveMobileKeypadField('exact');
                       }
                     }}
@@ -575,12 +625,12 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
         </div>
       </div>
 
-      {/* Tabla de Iteraciones Limpia */}
+      {/* Tabla de iteraciones estilo Dashboard Universitario */}
       {result && result.success && result.steps.length > 0 && (
-        <div className="surface p-5 sm:p-6 space-y-4">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm p-4 sm:p-6 space-y-4 view-fade-enter">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60 shrink-0">
+              <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60 shrink-0">
                 <FileSpreadsheet className="w-4 h-4" />
               </span>
               <div>
@@ -588,7 +638,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                   Tabla de iteraciones (<MathInline math={`N = ${result.steps.length - 1}`} />)
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Resultado final: <strong className="font-mono text-indigo-600 dark:text-indigo-400">y({result.steps[result.steps.length - 1].x}) ≈ {formatNum(result.steps[result.steps.length - 1].y, 6)}</strong>
+                  Resultado final: <strong className="font-mono text-blue-600 dark:text-blue-400">y({result.steps[result.steps.length - 1].x}) ≈ {formatNum(result.steps[result.steps.length - 1].y, 6)}</strong>
                 </p>
               </div>
             </div>
@@ -610,8 +660,8 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
           </div>
 
           <div className="overflow-x-auto overflow-y-auto max-h-[380px] rounded-xl border border-slate-200/80 dark:border-slate-800 custom-scrollbar">
-            <table className="w-full text-left text-xs">
-              <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400">
+            <table className="w-full text-right text-xs">
+              <thead className="sticky top-0 z-10 bg-slate-50/90 dark:bg-slate-800/90 border-b border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold">
                 <tr>
                   <th className="py-2.5 px-3 text-center font-bold">n</th>
                   <th className="py-2.5 px-3 font-bold"><MathInline math="x_n" /></th>
@@ -627,17 +677,17 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                   )}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {stepsToRender.map((s) => {
                   const isTerminal = s.n === result.steps[result.steps.length - 1].n;
                   return (
                     <React.Fragment key={s.n}>
-                      <tr className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors ${isTerminal ? 'bg-indigo-50/40 dark:bg-indigo-950/20 font-bold' : ''}`}>
+                      <tr className={`transition-colors ${isTerminal ? 'bg-blue-50/50 dark:bg-blue-950/40 font-semibold text-blue-900 dark:text-blue-200' : 'hover:bg-slate-50/75 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300'}`}>
                         <td className="py-2 px-3 text-center font-mono text-slate-500">{s.n}</td>
-                        <td className="py-2 px-3 font-mono">{formatNum(s.x, 4)}</td>
-                        <td className="py-2 px-3 font-mono font-bold text-indigo-600 dark:text-indigo-400">{formatNum(s.y, 6)}</td>
-                        <td className="py-2 px-3 font-mono text-slate-600 dark:text-slate-300">{isTerminal ? '—' : formatNum(s.slope, 6)}</td>
-                        <td className="py-2 px-3 font-mono text-teal-700 dark:text-teal-400">{isTerminal ? '—' : formatNum(s.nextY, 6)}</td>
+                        <td className="py-2 px-3 font-mono font-bold text-slate-900 dark:text-white">{formatNum(s.x, 4)}</td>
+                        <td className="py-2 px-3 font-mono font-bold text-blue-700 dark:text-blue-300">{formatNum(s.y, 6)}</td>
+                        <td className="py-2 px-3 font-mono text-slate-600 dark:text-slate-400">{isTerminal ? '—' : formatNum(s.slope, 6)}</td>
+                        <td className="py-2 px-3 font-mono font-bold">{isTerminal ? '—' : formatNum(s.nextY, 6)}</td>
                         {showAdvancedExact && exactInput.trim() && (
                           <>
                             <td className="py-2 px-3 font-mono text-emerald-700 dark:text-emerald-400">
@@ -668,6 +718,23 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
               </tbody>
             </table>
           </div>
+
+          {isLargeTable && (
+            <div className="p-3 bg-slate-50/90 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs">
+              <span className="text-slate-600 dark:text-slate-400">
+                {showAllRows
+                  ? `Mostrando las ${allStepsToRender.length} iteraciones completas.`
+                  : `Mostrando las primeras 100 de ${allStepsToRender.length} iteraciones para garantizar máxima fluidez.`}
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowAllRows(!showAllRows)}
+                className="btn-soft !py-1.5 !px-3 !text-xs font-semibold cursor-pointer shrink-0"
+              >
+                {showAllRows ? 'Mostrar solo primeras 100' : `Ver las ${allStepsToRender.length} filas`}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -681,6 +748,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
             : 'Solución analítica exacta y(x)'
         }
         value={activeMobileKeypadField === 'fn' ? fnInput : exactInput}
+        initialCursor={initialKeypadCursor}
         onChange={(val) => {
           if (activeMobileKeypadField === 'fn') {
             setFnInput(val);
