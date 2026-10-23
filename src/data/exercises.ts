@@ -91,7 +91,7 @@ export const GUIDE_EXERCISES: GuideExercise[] = [
   {
     id: 'ejemplo-didactico',
     source: 'Ejemplo Clásico de Texto',
-    title: 'Ejemplo Pedagógico: y\' = x + y',
+    title: 'Ejemplo Guía: y\' = x + y',
     description: "Problema inicial con y' = x + y, condición y(0) = 1, h = 0.1 hasta x = 0.5.",
     fnString: 'x + y',
     displayLatex: "y' = x + y",
