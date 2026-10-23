@@ -15,6 +15,7 @@ import {
   ChevronDown,
   ChevronUp,
   ChevronLeft,
+  ChevronRight,
   FileSpreadsheet,
   Code2,
   SlidersHorizontal,
@@ -47,8 +48,21 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
   const [copied, setCopied] = useState<boolean>(false);
   const [activeExerciseId, setActiveExerciseId] = useState<string>('utn-2a');
   const [showAllStepsBreakdown, setShowAllStepsBreakdown] = useState<boolean>(false);
+  const [expandedStepIndices, setExpandedStepIndices] = useState<Set<number>>(new Set());
   const [visibleIterationsLimit, setVisibleIterationsLimit] = useState<number | null>(null);
   const [showAllRows, setShowAllRows] = useState<boolean>(false);
+
+  const toggleStepBreakdown = (stepN: number) => {
+    setExpandedStepIndices((prev) => {
+      const next = new Set(prev);
+      if (next.has(stepN)) {
+        next.delete(stepN);
+      } else {
+        next.add(stepN);
+      }
+      return next;
+    });
+  };
 
   // Redimensionar el canvas/SVG del gráfico al abrir o colapsar el panel lateral
   useEffect(() => {
@@ -644,9 +658,24 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
             </div>
 
             <div className="flex items-center flex-wrap gap-2">
-              <button onClick={() => setShowAllStepsBreakdown(!showAllStepsBreakdown)} className="btn-soft !text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  const nextState = !showAllStepsBreakdown;
+                  setShowAllStepsBreakdown(nextState);
+                  if (nextState) {
+                    setExpandedStepIndices(new Set());
+                  }
+                }}
+                className={`btn-soft !text-xs transition-colors ${
+                  showAllStepsBreakdown
+                    ? 'bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-950/60 dark:border-indigo-800 dark:text-indigo-300 font-semibold'
+                    : ''
+                }`}
+                title="Mostrar u ocultar el desglose de fórmulas y cálculo de errores de todas las iteraciones"
+              >
                 <Code2 className="w-3.5 h-3.5" />
-                <span>{showAllStepsBreakdown ? 'Ocultar fórmulas' : 'Ver fórmulas'}</span>
+                <span>{showAllStepsBreakdown ? 'Ocultar fórmulas y errores' : 'Ver fórmulas y errores'}</span>
               </button>
               <button onClick={handleCopyTable} className="btn-soft !text-xs">
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
@@ -680,10 +709,31 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {stepsToRender.map((s) => {
                   const isTerminal = s.n === result.steps[result.steps.length - 1].n;
+                  const isExpanded = showAllStepsBreakdown || expandedStepIndices.has(s.n);
                   return (
                     <React.Fragment key={s.n}>
-                      <tr className={`transition-colors ${isTerminal ? 'bg-blue-50/50 dark:bg-blue-950/40 font-semibold text-blue-900 dark:text-blue-200' : 'hover:bg-slate-50/75 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300'}`}>
-                        <td className="py-2 px-3 text-center font-mono text-slate-500">{s.n}</td>
+                      <tr
+                        className={`transition-colors ${
+                          isTerminal
+                            ? 'bg-blue-50/50 dark:bg-blue-950/40 font-semibold text-blue-900 dark:text-blue-200'
+                            : 'hover:bg-slate-50/75 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300'
+                        } ${isExpanded ? 'bg-indigo-50/30 dark:bg-indigo-950/20' : ''}`}
+                      >
+                        <td className="py-2 px-3 text-center font-mono text-slate-500">
+                          <button
+                            type="button"
+                            onClick={() => toggleStepBreakdown(s.n)}
+                            className="inline-flex items-center justify-center gap-1 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-semibold group"
+                            title={isExpanded ? `Ocultar fórmulas del paso ${s.n}` : `Ver fórmulas y errores del paso ${s.n}`}
+                          >
+                            <ChevronRight
+                              className={`w-3 h-3 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-transform duration-200 ${
+                                isExpanded ? 'rotate-90 text-indigo-600 dark:text-indigo-400' : ''
+                              }`}
+                            />
+                            <span>{s.n}</span>
+                          </button>
+                        </td>
                         <td className="py-2 px-3 font-mono font-bold text-slate-900 dark:text-white">{formatNum(s.x, 4)}</td>
                         <td className="py-2 px-3 font-mono font-bold text-blue-700 dark:text-blue-300">{formatNum(s.y, 6)}</td>
                         <td className="py-2 px-3 font-mono text-slate-600 dark:text-slate-400">{isTerminal ? '—' : formatNum(s.slope, 6)}</td>
@@ -704,11 +754,110 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
                           </>
                         )}
                       </tr>
-                      {showAllStepsBreakdown && !isTerminal && (
-                        <tr className="bg-slate-50/70 dark:bg-slate-800/30 text-xs">
-                          <td colSpan={showAdvancedExact && exactInput.trim() ? 8 : 5} className="py-2 px-4">
-                            <span className="text-indigo-600 dark:text-indigo-400 font-bold mr-2 text-[11px]">Paso {s.n}:</span>
-                            <MathInline math={s.stepFormulaLatex} />
+                      {isExpanded && (
+                        <tr className="bg-slate-50/90 dark:bg-slate-900/80 border-b border-slate-200/80 dark:border-slate-800 transition-colors">
+                          <td
+                            colSpan={showAdvancedExact && exactInput.trim() ? 8 : 5}
+                            className="py-3 px-3 sm:px-5 text-left"
+                          >
+                            <div className="bg-white dark:bg-slate-950/70 rounded-xl p-3 sm:p-4 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3">
+                              {/* Encabezado del paso */}
+                              <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800/80 text-xs">
+                                <div className="flex items-center gap-2">
+                                  <span
+                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full font-bold text-[11px] ${
+                                      isTerminal
+                                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
+                                        : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800'
+                                    }`}
+                                  >
+                                    {isTerminal ? `Paso Final (n = ${s.n})` : `Paso ${s.n}`}
+                                  </span>
+                                  <span className="text-slate-600 dark:text-slate-300 font-medium">
+                                    {isTerminal
+                                      ? `Punto terminal alcanzado en x = ${formatNum(s.x, 4)}`
+                                      : `Avance hacia x_{${s.n + 1}} = ${formatNum(
+                                          s.n + 1 < result.steps.length ? result.steps[s.n + 1].x : s.x + result.h,
+                                          4
+                                        )}`}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center gap-3 text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                                  <span>
+                                    x_{s.n} = <strong className="text-slate-700 dark:text-slate-200">{formatNum(s.x, 4)}</strong>
+                                  </span>
+                                  <span>
+                                    y_{s.n} = <strong className="text-blue-600 dark:text-blue-400">{formatNum(s.y, 6)}</strong>
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Bloques de cálculo: Euler y Errores */}
+                              <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+                                {/* Card: Fórmula de avance de Euler */}
+                                <div
+                                  className={`${
+                                    showAdvancedExact && exactInput.trim() && s.absErrorFormulaLatex
+                                      ? 'lg:col-span-12 xl:col-span-5'
+                                      : 'lg:col-span-12'
+                                  } bg-slate-50/70 dark:bg-slate-900/50 rounded-lg p-3 border border-slate-200/70 dark:border-slate-800/70 flex flex-col justify-center`}
+                                >
+                                  <div className="flex items-center justify-between text-[11px] font-semibold text-indigo-700 dark:text-indigo-400 mb-1.5">
+                                    <span>{isTerminal ? 'Aproximación de Euler (punto final):' : 'Fórmula de avance de Euler:'}</span>
+                                    {!isTerminal && (
+                                      <span className="text-[10px] font-mono text-slate-400">
+                                        <MathInline math="y_{n+1} = y_n + h \cdot f(x_n, y_n)" />
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="overflow-x-auto py-1 text-xs text-slate-800 dark:text-slate-200 custom-scrollbar">
+                                    <MathInline math={s.stepFormulaLatex} />
+                                  </div>
+                                </div>
+
+                                {/* Cards: Cálculo de Errores (si existe solución analítica) */}
+                                {showAdvancedExact && exactInput.trim() && s.absErrorFormulaLatex && (
+                                  <div className="lg:col-span-12 xl:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {/* Error Absoluto */}
+                                    <div className="bg-amber-50/40 dark:bg-amber-950/20 rounded-lg p-3 border border-amber-200/60 dark:border-amber-900/40 flex flex-col justify-center">
+                                      <div className="flex items-center justify-between text-[11px] font-semibold text-amber-800 dark:text-amber-400 mb-1.5">
+                                        <span>Cálculo Error Absoluto:</span>
+                                        <span className="text-[10px] font-mono text-amber-600/80 dark:text-amber-400/80">
+                                          <MathInline math={isTerminal ? "E_{\\text{abs}} = |y(x_f) - y_n|" : "E_{\\text{abs}} = |y(x_n) - y_n|"} />
+                                        </span>
+                                      </div>
+                                      <div className="overflow-x-auto py-1 text-xs text-amber-950 dark:text-amber-200 custom-scrollbar">
+                                        <MathInline math={s.absErrorFormulaLatex} />
+                                      </div>
+                                    </div>
+
+                                    {/* Error Relativo Porcentual */}
+                                    <div className="bg-purple-50/40 dark:bg-purple-950/20 rounded-lg p-3 border border-purple-200/60 dark:border-purple-900/40 flex flex-col justify-center">
+                                      <div className="flex items-center justify-between text-[11px] font-semibold text-purple-800 dark:text-purple-400 mb-1.5">
+                                        <span>Cálculo Error Relativo %:</span>
+                                        <span className="text-[10px] font-mono text-purple-600/80 dark:text-purple-400/80">
+                                          <MathInline
+                                            math={
+                                              isTerminal
+                                                ? "E_{\\text{rel}} = \\frac{E_{\\text{abs}}}{|y(x_f)|} \\times 100\\%"
+                                                : "E_{\\text{rel}} = \\frac{E_{\\text{abs}}}{|y(x_n)|} \\times 100\\%"
+                                            }
+                                          />
+                                        </span>
+                                      </div>
+                                      <div className="overflow-x-auto py-1 text-xs text-purple-950 dark:text-purple-200 custom-scrollbar">
+                                        {s.relErrorFormulaLatex ? (
+                                          <MathInline math={s.relErrorFormulaLatex} />
+                                        ) : (
+                                          <span className="text-slate-400 font-mono text-xs">No aplicable</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                           </td>
                         </tr>
                       )}

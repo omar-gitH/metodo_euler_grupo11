@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MathBlock, MathInline } from './MathView';
+import { MathBlock, MathInline, MathText } from './MathView';
 import {
   PlayCircle,
   Calculator as CalcIcon,
@@ -43,6 +43,11 @@ interface TableRowData {
   note?: string;
 }
 
+interface ComparisonMetric {
+  label: string;
+  math: string;
+}
+
 interface StepByStepExercise {
   id: string;
   tabLabel: string;
@@ -66,6 +71,7 @@ interface StepByStepExercise {
   tableRows: TableRowData[];
   finalResultText: string;
   comparisonText: string;
+  comparisonMetrics?: ComparisonMetric[];
   pedagogicalNote?: string;
   calcPreset: {
     fn: string;
@@ -84,7 +90,7 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
     badge: 'UTN FRLP · EDO Racional',
     title: "Ejercicio 1: y' = x y² - y/x",
     contextSentence:
-      'Problema con término no lineal cuadrático y cociente racional y/x con condición inicial y(1) = 1.',
+      'Problema con término no lineal cuadrático y cociente racional $\\frac{y}{x}$ con condición inicial $y(1) = 1$.',
     varName: 'x',
     edoLatex: "y' = x y^2 - \\frac{y}{x}",
     edoFormulaRight: 'x y^2 - \\frac{y}{x}',
@@ -97,7 +103,7 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
     xfVal: 1.5,
     numIterations: 5,
     iterationsFormulaLatex: 'n = \\frac{1.5 - 1.0}{0.1} = 5 \\text{ iteraciones}',
-    slopeActionDescription: 'multiplicando x por y² y restando el cociente y/x',
+    slopeActionDescription: 'multiplicando $x$ por $y^2$ y restando el cociente $\\frac{y}{x}$',
     iterations: [
       {
         stepNum: 1,
@@ -105,7 +111,7 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
         targetVarVal: '1.1',
         isFinal: false,
         explanation:
-          'Partimos de la condición inicial (1, 1). Evaluamos la derivada: 1.0 · (1.0)² - (1.0 / 1.0) = 1 - 1 = 0.0000. La tangente inicial es horizontal y avanzamos h = 0.1.',
+          'Partimos de la condición inicial $(1, 1)$. Evaluamos la derivada: $1.0 \\cdot (1.0)^2 - \\frac{1.0}{1.0} = 1 - 1 = 0.0000$. La tangente inicial es horizontal y avanzamos $h = 0.1$.',
         currentPoint: { varName: 'x', varVal: '1.0', yVal: '1.0000' },
         slope: {
           formulaLatex: 'f(x_0, y_0) = x_0 y_0^2 - \\frac{y_0}{x_0}',
@@ -124,7 +130,7 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
         targetVarVal: '1.2',
         isFinal: false,
         explanation:
-          'El nuevo punto base es (1.1, 1.0000). Calculamos la pendiente: 1.1 · (1.0)² - (1.0 / 1.1) = 1.1 - 0.9091 = 0.1909. Avanzamos el segundo paso.',
+          'El nuevo punto base es $(1.1, 1.0000)$. Calculamos la pendiente: $1.1 \\cdot (1.0)^2 - \\frac{1.0}{1.1} = 1.1 - 0.9091 = 0.1909$. Avanzamos el segundo paso.',
         currentPoint: { varName: 'x', varVal: '1.1', yVal: '1.0000' },
         slope: {
           formulaLatex: 'f(x_1, y_1) = x_1 y_1^2 - \\frac{y_1}{x_1}',
@@ -143,7 +149,7 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
         targetVarVal: '1.3',
         isFinal: false,
         explanation:
-          'Punto base: (1.2, 1.0191). Calculamos la pendiente: 1.2 · (1.0191)² - (1.0191 / 1.2) = 1.2463 - 0.8492 = 0.3970. Sumamos el avance vertical.',
+          'Punto base: $(1.2, 1.0191)$. Calculamos la pendiente: $1.2 \\cdot (1.0191)^2 - \\frac{1.0191}{1.2} = 1.2463 - 0.8492 = 0.3970$. Sumamos el avance vertical.',
         currentPoint: { varName: 'x', varVal: '1.2', yVal: '1.0191' },
         slope: {
           formulaLatex: 'f(x_2, y_2) = x_2 y_2^2 - \\frac{y_2}{x_2}',
@@ -162,7 +168,7 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
         targetVarVal: '1.4',
         isFinal: false,
         explanation:
-          'Punto base: (1.3, 1.0588). Evaluamos la pendiente: 1.3 · (1.0588)² - (1.0588 / 1.3) = 1.4574 - 0.8145 = 0.6429. Avanzamos a x = 1.4.',
+          'Punto base: $(1.3, 1.0588)$. Evaluamos la pendiente: $1.3 \\cdot (1.0588)^2 - \\frac{1.0588}{1.3} = 1.4574 - 0.8145 = 0.6429$. Avanzamos a $x = 1.4$.',
         currentPoint: { varName: 'x', varVal: '1.3', yVal: '1.0588' },
         slope: {
           formulaLatex: 'f(x_3, y_3) = x_3 y_3^2 - \\frac{y_3}{x_3}',
@@ -181,7 +187,7 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
         targetVarVal: '1.5',
         isFinal: true,
         explanation:
-          'Último paso hasta x = 1.5. Evaluamos la pendiente final: 1.4 · (1.1231)² - (1.1231 / 1.4) = 1.7658 - 0.8022 = 0.9636. Obtenemos el resultado aproximado pedido.',
+          'Último paso hasta $x = 1.5$. Evaluamos la pendiente final: $1.4 \\cdot (1.1231)^2 - \\frac{1.1231}{1.4} = 1.7658 - 0.8022 = 0.9636$. Obtenemos el resultado aproximado pedido.',
         currentPoint: { varName: 'x', varVal: '1.4', yVal: '1.1231' },
         slope: {
           formulaLatex: 'f(x_4, y_4) = x_4 y_4^2 - \\frac{y_4}{x_4}',
@@ -205,9 +211,15 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
     ],
     finalResultText: 'y(1.5) \\approx 1.2194',
     comparisonText:
-      'la solución exacta por ecuación de Bernoulli es y(x) = \\frac{1}{2x - x^2}, que en x = 1.5 da y(1.5) = \\frac{4}{3} \\approx 1.33333. El error absoluto es 0.11388 (error relativo 8.54%). También se puede resolver con h = 0.05 para hallar y(1.25), reduciendo a la mitad el error de truncamiento.',
+      'La solución exacta por ecuación de Bernoulli es $y(x) = \\frac{1}{2x - x^2}$, que al evaluar en $x = 1.5$ da $y(1.5) = \\frac{4}{3} \\approx 1.33333$. El error absoluto es $E_{\\text{abs}} = |y_{\\text{exacta}} - y_{\\text{num}}| = \\left|\\frac{4}{3} - 1.2194\\right| \\approx 0.11388$ (error relativo $E_{\\text{rel}} \\approx 8.54\\%$). También se puede resolver con paso $h = 0.05$ para hallar $y(1.25)$, reduciendo a la mitad el error de truncamiento.',
+    comparisonMetrics: [
+      { label: 'Aprox. Euler (numérica)', math: 'y_{\\text{num}}(1.5) \\approx 1.2194' },
+      { label: 'Solución exacta', math: 'y(1.5) = \\frac{4}{3} \\approx 1.3333' },
+      { label: 'Error absoluto (E_abs)', math: 'E_{\\text{abs}} \\approx 0.1139' },
+      { label: 'Error relativo (E_rel)', math: 'E_{\\text{rel}} \\approx 8.54\\%' },
+    ],
     pedagogicalNote:
-      'Ejercicio clásico de examen UTN (Práctica EDO 2d): al despejar por Bernoulli se aprecia cómo Euler aproxima una función racional con denominador cuadrático que posee una asíntota vertical en x = 2.',
+      'Ejercicio clásico de examen UTN (Práctica EDO 2d): al despejar por Bernoulli se aprecia cómo Euler aproxima una función racional con denominador cuadrático que posee una asíntota vertical en $x = 2$.',
     calcPreset: {
       fn: 'x*y^2 - y/x',
       x0: 1,
@@ -223,7 +235,7 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
     badge: 'UTN FRLP · Apunte Oficial',
     title: 'Ejercicio 2: Práctica 2b (Guía Oficial UTN)',
     contextSentence:
-      'Problema resuelto en páginas 9 a 11 del apunte de la cátedra con variable temporal t y función trascendente trigonométrica y exponencial.',
+      'Problema resuelto en páginas 9 a 11 del apunte de la cátedra con variable temporal $t$ y función trascendente trigonométrica y exponencial.',
     varName: 't',
     edoLatex: "y' = \\operatorname{sen}(t) + e^{-t}",
     edoFormulaRight: '\\operatorname{sen}(t) + e^{-t}',
@@ -236,7 +248,7 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
     xfVal: 1.0,
     numIterations: 2,
     iterationsFormulaLatex: 'n = \\frac{1.0 - 0}{0.5} = 2 \\text{ iteraciones}',
-    slopeActionDescription: 'sumando el seno y la exponencial decreciente de t',
+    slopeActionDescription: 'sumando $\\operatorname{sen}(t)$ y la exponencial decreciente $e^{-t}$',
     iterations: [
       {
         stepNum: 1,
@@ -244,7 +256,7 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
         targetVarVal: '0.5',
         isFinal: false,
         explanation:
-          'Partimos de la condición inicial (t=0, y=0). Con la EDO calculamos la pendiente inicial: sen(0)=0 y e⁰=1, con lo cual la pendiente es 1.0000. Avanzamos un paso grande h = 0.5.',
+          'Partimos de la condición inicial $(t=0, y=0)$. Con la EDO calculamos la pendiente inicial: $\\operatorname{sen}(0) = 0$ y $e^0 = 1$, con lo cual la pendiente es $1.0000$. Avanzamos un paso grande $h = 0.5$.',
         currentPoint: { varName: 't', varVal: '0.0', yVal: '0.0000' },
         slope: {
           formulaLatex: 'f(t_0, y_0) = \\operatorname{sen}(t_0) + e^{-t_0}',
@@ -263,7 +275,7 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
         targetVarVal: '1.0',
         isFinal: true,
         explanation:
-          'El punto de partida ahora es (0.5, 0.5000). Calculamos la nueva pendiente evaluando sen(0.5) ≈ 0.4794 y e⁻⁰·⁵ ≈ 0.6065. Con su suma avanzamos el último salto de h = 0.5 hasta t = 1.0.',
+          'El punto de partida ahora es $(0.5, 0.5000)$. Calculamos la nueva pendiente evaluando $\\operatorname{sen}(0.5) \\approx 0.4794$ y $e^{-0.5} \\approx 0.6065$. Con su suma avanzamos el último salto de $h = 0.5$ hasta $t = 1.0$.',
         currentPoint: { varName: 't', varVal: '0.5', yVal: '0.5000' },
         slope: {
           formulaLatex: 'f(t_1, y_1) = \\operatorname{sen}(t_1) + e^{-t_1}',
@@ -284,9 +296,15 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
     ],
     finalResultText: 'y(1.0) \\approx 1.0430',
     comparisonText:
-      'la solución exacta de este PVI es y(t) = 2 - \\cos(t) - e^{-t}, que da y(1.0) = 1.09182. El error absoluto es 0.04882 (error relativo del 4.47%), sumamente bueno para haber usado apenas 2 pasos grandes de h = 0.5.',
+      'La solución analítica exacta de este PVI por integración directa es $y(t) = 2 - \\cos(t) - e^{-t}$, que en $t = 1.0$ resulta en $y(1.0) = 2 - \\cos(1) - e^{-1} \\approx 1.09182$. Al comparar con la aproximación de Euler ($y_2 \\approx 1.0430$), el error absoluto es $E_{\\text{abs}} = |y_{\\text{exacta}} - y_{\\text{num}}| = |1.09182 - 1.0430| = 0.04882$ (error relativo $E_{\\text{rel}} \\approx 4.47\\%$), una aproximación sumamente buena para haber empleado apenas 2 pasos grandes de $h = 0.5$.',
+    comparisonMetrics: [
+      { label: 'Aprox. Euler (numérica)', math: 'y_{\\text{num}}(1.0) \\approx 1.0430' },
+      { label: 'Solución exacta', math: 'y(1.0) \\approx 1.0918' },
+      { label: 'Error absoluto (E_abs)', math: 'E_{\\text{abs}} = 0.0488' },
+      { label: 'Error relativo (E_rel)', math: 'E_{\\text{rel}} \\approx 4.47\\%' },
+    ],
     pedagogicalNote:
-      'En el apunte de cátedra original (pág. 11), el resultado de y₂ figura transcripto como 1.4297 por un error aritmético manual de tipeo al sumar 0.5 + 0.5 * 1.0860. La resolución algebraica rigurosa arroja exactamente 1.0430.',
+      'En el apunte de cátedra original (pág. 11), el resultado de $y_2$ figura transcripto como $1.4297$ por un error aritmético manual de tipeo al sumar $0.5 + 0.5 \\cdot 1.0860$. La resolución algebraica rigurosa arroja exactamente $1.0430$.',
     calcPreset: {
       fn: 'sin(x) + exp(-x)',
       x0: 0,
@@ -302,7 +320,7 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
     badge: 'UTN FRLP · EDO No Lineal',
     title: 'Ejercicio 3: Práctica 2c (Guía Oficial UTN)',
     contextSentence:
-      'Problema no lineal con término cuadrático (x - y)², donde la recta tangente aproxima la solución sin requerir integrales analíticas complejas.',
+      'Problema no lineal con término cuadrático $(x - y)^2$, donde la recta tangente aproxima la solución sin requerir integrales analíticas complejas.',
     varName: 'x',
     edoLatex: "y' = (x - y)^2",
     edoFormulaRight: '(x - y)^2',
@@ -315,7 +333,7 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
     xfVal: 2.75,
     numIterations: 3,
     iterationsFormulaLatex: 'n = \\frac{2.75 - 2.0}{0.25} = 3 \\text{ iteraciones}',
-    slopeActionDescription: 'evaluando la resta (x - y) elevada al cuadrado',
+    slopeActionDescription: 'evaluando la diferencia $(x - y)^2$',
     iterations: [
       {
         stepNum: 1,
@@ -323,7 +341,7 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
         targetVarVal: '2.25',
         isFinal: false,
         explanation:
-          'Partimos de la condición inicial (x=2, y=0.5). Evaluamos la resta al cuadrado en la derivada: (2 - 0.5)² = 1.5² = 2.2500. Multiplicamos por h = 0.25 para obtener el avance vertical.',
+          'Partimos de la condición inicial $(x=2, y=0.5)$. Evaluamos la resta al cuadrado en la derivada: $(2 - 0.5)^2 = 1.5^2 = 2.2500$. Multiplicamos por $h = 0.25$ para obtener el avance vertical.',
         currentPoint: { varName: 'x', varVal: '2.00', yVal: '0.5000' },
         slope: {
           formulaLatex: 'f(x_0, y_0) = (x_0 - y_0)^2',
@@ -342,7 +360,7 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
         targetVarVal: '2.50',
         isFinal: false,
         explanation:
-          'Nuevo punto base: (2.25, 1.0625). La nueva pendiente es (2.25 - 1.0625)² = 1.1875² ≈ 1.4102. Avanzamos el segundo cuarto de paso.',
+          'Nuevo punto base: $(2.25, 1.0625)$. La nueva pendiente es $(2.25 - 1.0625)^2 = 1.1875^2 \\approx 1.4102$. Avanzamos el segundo cuarto de paso.',
         currentPoint: { varName: 'x', varVal: '2.25', yVal: '1.0625' },
         slope: {
           formulaLatex: 'f(x_1, y_1) = (x_1 - y_1)^2',
@@ -361,7 +379,7 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
         targetVarVal: '2.75',
         isFinal: true,
         explanation:
-          'Último paso hasta x = 2.75. Calculamos la pendiente final con el punto anterior: (2.50 - 1.4151)² = 1.0849² ≈ 1.1770 y calculamos la aproximación pedida.',
+          'Último paso hasta $x = 2.75$. Calculamos la pendiente final con el punto anterior: $(2.50 - 1.4151)^2 = 1.0849^2 \\approx 1.1770$ y calculamos la aproximación pedida.',
         currentPoint: { varName: 'x', varVal: '2.50', yVal: '1.4151' },
         slope: {
           formulaLatex: 'f(x_2, y_2) = (x_2 - y_2)^2',
@@ -383,7 +401,13 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
     ],
     finalResultText: 'y(2.75) \\approx 1.7094',
     comparisonText:
-      'en este ejercicio no lineal, la solución analítica presenta una asíntota cercana donde los métodos tradicionales fallan o se complican; el método de Euler permite calcular el avance paso a paso con total simplicidad aritmética.',
+      'En este ejercicio no lineal con $y\' = (x - y)^2$, la solución analítica presenta una asíntota vertical cercana en $x \\approx 2.8047$ donde los métodos tradicionales fallan o se complican; el método de Euler permite calcular el avance paso a paso con total simplicidad aritmética, alcanzando la aproximación $y(2.75) \\approx 1.7094$.',
+    comparisonMetrics: [
+      { label: 'Aprox. Euler (numérica)', math: 'y_{\\text{num}}(2.75) \\approx 1.7094' },
+      { label: 'Asíntota analítica', math: 'x_{\\text{asíntota}} \\approx 2.8047' },
+      { label: 'Paso de discretización', math: 'h = 0.25 \\; (3 \\text{ pasos})' },
+      { label: 'Comportamiento', math: '\\text{Estable en dominio acotado}' },
+    ],
     pedagogicalNote:
       'Ideal para parciales y exámenes finales: demuestra que el método de Euler funciona exactamente igual sin importar si la ecuación diferencial es lineal o no lineal.',
     calcPreset: {
@@ -513,7 +537,7 @@ export const PracticalExample: React.FC<PracticalExampleProps> = ({
 
           {/* Frase introductoria */}
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 italic">
-            {curEx.contextSentence}
+            <MathText text={curEx.contextSentence} />
           </p>
 
           {/* Nota pedagógica */}
@@ -521,7 +545,7 @@ export const PracticalExample: React.FC<PracticalExampleProps> = ({
             <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 text-xs text-slate-700 dark:text-slate-300">
               <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
               <span>
-                <strong>Nota de cátedra:</strong> {curEx.pedagogicalNote}
+                <strong>Nota de cátedra:</strong> <MathText text={curEx.pedagogicalNote} />
               </span>
             </div>
           )}
@@ -557,7 +581,7 @@ export const PracticalExample: React.FC<PracticalExampleProps> = ({
               <li>
                 <strong>Repetir en cada iteración tres cosas:</strong>{' '}
                 (a) tomar el punto actual <MathInline math={`(${curEx.varName}_n, y_n)`} />,{' '}
-                (b) calcular la pendiente con <MathInline math="f" /> ({curEx.slopeActionDescription}),{' '}
+                (b) calcular la pendiente con <MathInline math="f" /> (<MathText text={curEx.slopeActionDescription} />),{' '}
                 (c) avanzar con <MathInline math="y_{n+1} = y_n + h \\cdot f" />.
               </li>
               <li>
@@ -594,7 +618,7 @@ export const PracticalExample: React.FC<PracticalExampleProps> = ({
 
                   {/* Explicación en texto */}
                   <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    {it.explanation}
+                    <MathText text={it.explanation} />
                   </p>
 
                   {/* Grilla responsiva de 3 cajas: (a) Punto actual, (b) Pendiente, (c) Avance */}
@@ -708,13 +732,31 @@ export const PracticalExample: React.FC<PracticalExampleProps> = ({
           </div>
 
           {/* Tarjeta de Resultado y Comparación con Solución Exacta */}
-          <div className="p-4 sm:p-5 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed space-y-1">
+          <div className="p-4 sm:p-5 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed space-y-3">
             <p>
               <strong className="text-slate-900 dark:text-white">Resultado numérico:</strong>{' '}
               <MathInline math={curEx.finalResultText} />.{' '}
               <strong className="text-slate-900 dark:text-white">Comparación analítica:</strong>{' '}
-              {curEx.comparisonText}
+              <MathText text={curEx.comparisonText} />
             </p>
+
+            {curEx.comparisonMetrics && curEx.comparisonMetrics.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+                {curEx.comparisonMetrics.map((metric, idx) => (
+                  <div
+                    key={idx}
+                    className="p-2.5 rounded-lg bg-white dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-700/60 text-center shadow-2xs"
+                  >
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
+                      {metric.label}
+                    </span>
+                    <span className="font-serif text-xs sm:text-sm text-slate-900 dark:text-slate-100 font-semibold block">
+                      <MathInline math={metric.math} />
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Navegación entre Ejercicios (Anterior / Siguiente) */}

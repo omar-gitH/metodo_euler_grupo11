@@ -10,6 +10,8 @@ export interface EulerStep {
   absError?: number | null;
   relErrorPercent?: number | null;
   stepFormulaLatex: string;
+  absErrorFormulaLatex?: string | null;
+  relErrorFormulaLatex?: string | null;
 }
 
 export interface SlopeFieldPoint {
@@ -235,9 +237,30 @@ export function computeEuler(params: {
         : null;
 
     // Build clear step formula LaTeX string
-    const formulaLatex = `y_{${n + 1}} = y_{${n}} + ${formatNum(stepH)} \\cdot f(x_{${n}}, y_{${n}}) = ${formatNum(
-      currentY
-    )} + ${formatNum(stepH)} \\cdot (${formatNum(slope)}) = ${formatNum(nextY)}`;
+    const formulaLatex = `y_{${n + 1}} = y_{${n}} + h \\cdot f(x_{${n}}, y_{${n}}) = ${formatNum(
+      currentY,
+      6
+    )} + ${formatNum(stepH, 4)} \\cdot (${formatNum(slope, 6)}) = ${formatNum(nextY, 6)}`;
+
+    // Build detailed error formulas with algebraic substitution
+    let absErrorFormulaLatex: string | null = null;
+    let relErrorFormulaLatex: string | null = null;
+
+    if (yExactVal !== null && !isNaN(yExactVal) && absError !== null) {
+      absErrorFormulaLatex = `E_{\\text{abs}} = |y(x_{${n}}) - y_{${n}}| = |${formatNum(
+        yExactVal,
+        6
+      )} - ${formatNum(currentY, 6)}| = ${formatNum(absError, 6)}`;
+
+      if (relError !== null) {
+        relErrorFormulaLatex = `E_{\\text{rel}} = \\frac{E_{\\text{abs}}}{|y(x_{${n}})|} \\times 100\\% = \\frac{${formatNum(
+          absError,
+          6
+        )}}{|${formatNum(yExactVal, 6)}|} \\times 100\\% = ${formatNum(relError, 3)}\\%`;
+      } else {
+        relErrorFormulaLatex = `E_{\\text{rel}} = \\text{Indefinido } (|y(x_{${n}})| = 0)`;
+      }
+    }
 
     steps.push({
       n,
@@ -249,6 +272,8 @@ export function computeEuler(params: {
       absError,
       relErrorPercent: relError,
       stepFormulaLatex: formulaLatex,
+      absErrorFormulaLatex,
+      relErrorFormulaLatex,
     });
 
     currentX = Number((currentX + stepH).toFixed(8));
@@ -285,6 +310,25 @@ export function computeEuler(params: {
       ? (finalAbsError! / Math.abs(finalExact)) * 100
       : null;
 
+  let finalAbsErrorFormulaLatex: string | null = null;
+  let finalRelErrorFormulaLatex: string | null = null;
+
+  if (finalExact !== null && !isNaN(finalExact) && finalAbsError !== null) {
+    finalAbsErrorFormulaLatex = `E_{\\text{abs}} = |y(x_f) - y_{${n}}| = |${formatNum(
+      finalExact,
+      6
+    )} - ${formatNum(currentY, 6)}| = ${formatNum(finalAbsError, 6)}`;
+
+    if (finalRelError !== null) {
+      finalRelErrorFormulaLatex = `E_{\\text{rel}} = \\frac{E_{\\text{abs}}}{|y(x_f)|} \\times 100\\% = \\frac{${formatNum(
+        finalAbsError,
+        6
+      )}}{|${formatNum(finalExact, 6)}|} \\times 100\\% = ${formatNum(finalRelError, 3)}\\%`;
+    } else {
+      finalRelErrorFormulaLatex = `E_{\\text{rel}} = \\text{Indefinido } (|y(x_f)| = 0)`;
+    }
+  }
+
   steps.push({
     n,
     x: Number(currentX.toFixed(8)),
@@ -294,7 +338,9 @@ export function computeEuler(params: {
     yExact: finalExact,
     absError: finalAbsError,
     relErrorPercent: finalRelError,
-    stepFormulaLatex: `y(${formatNum(currentX)}) \\approx ${formatNum(currentY)} \\text{ (punto final alcanzado)}`,
+    stepFormulaLatex: `y(${formatNum(currentX, 4)}) \\approx ${formatNum(currentY, 6)} \\quad \\text{(Punto final alcanzado)}`,
+    absErrorFormulaLatex: finalAbsErrorFormulaLatex,
+    relErrorFormulaLatex: finalRelErrorFormulaLatex,
   });
 
   return {

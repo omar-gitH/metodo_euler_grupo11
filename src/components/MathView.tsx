@@ -50,6 +50,38 @@ export const MathInline: React.FC<{ math: string; className?: string }> = ({ mat
   <MathView math={math} block={false} className={className} />
 );
 
+/**
+ * Renders mixed text with KaTeX formulas enclosed in $...$ (inline) or $$...$$ (block).
+ * Preserves standard text, spaces, and punctuation surrounding the math formulas.
+ */
+export const MathText: React.FC<{ text: string; className?: string }> = ({ text, className = '' }) => {
+  const elements = useMemo(() => {
+    if (!text) return null;
+
+    // Matches $$...$$ (block math) or $...$ (inline math)
+    const regex = /(\$\$[\s\S]+?\$\$|\$[^\$]+?\$)/g;
+    const parts = text.split(regex);
+
+    return parts.map((part, idx) => {
+      if (!part) return null;
+
+      if (part.startsWith('$$') && part.endsWith('$$') && part.length >= 4) {
+        const math = part.slice(2, -2).trim();
+        return <MathBlock key={idx} math={math} />;
+      }
+
+      if (part.startsWith('$') && part.endsWith('$') && part.length >= 2) {
+        const math = part.slice(1, -1).trim();
+        return <MathInline key={idx} math={math} />;
+      }
+
+      return <React.Fragment key={idx}>{part}</React.Fragment>;
+    });
+  }, [text]);
+
+  return <span className={className}>{elements}</span>;
+};
+
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, '&amp;')
