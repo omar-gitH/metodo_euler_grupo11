@@ -246,7 +246,10 @@ export default function App() {
         </header>
 
         {/* Contenido principal con márgenes responsivos y transiciones fluidas */}
-        <main className="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-8 sm:py-14 space-y-14 sm:space-y-20">
+        <main
+          className="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-8 sm:py-14 space-y-14 sm:space-y-20"
+          style={{ overflowAnchor: 'none' }}
+        >
           {/* 1. Marco Teórico */}
           <Theory
             onGoToCalculator={() => scrollTo('calculadora')}

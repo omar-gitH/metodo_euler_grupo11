@@ -605,7 +605,9 @@ export const PracticalExample: React.FC<PracticalExampleProps> = ({
                   {/* Encabezado del paso */}
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-2">
                     <span className="font-bold text-slate-900 dark:text-white text-sm">
-                      Iteración {it.stepNum}: calcular{' '}
+                      Iteración {it.stepNum}: avanzar desde{' '}
+                      <MathInline math={`${it.targetVarName}_${it.stepNum - 1} = ${it.currentPoint.varVal}`} />{' '}
+                      hasta{' '}
                       <MathInline math={`y_${it.stepNum}`} /> en{' '}
                       <MathInline math={`${it.targetVarName}_${it.stepNum} = ${it.targetVarVal}`} />
                       {it.isFinal && (
@@ -638,7 +640,7 @@ export const PracticalExample: React.FC<PracticalExampleProps> = ({
                     {/* Caja (b) Pendiente */}
                     <div className="border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 rounded-xl p-3 space-y-1">
                       <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
-                        (b) Pendiente
+                        (b) Pendiente en el punto actual
                       </span>
                       <div className="font-mono text-xs sm:text-sm text-slate-800 dark:text-slate-100">
                         <MathInline
@@ -677,7 +679,7 @@ export const PracticalExample: React.FC<PracticalExampleProps> = ({
 
             <div className="overflow-x-auto rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-2xs">
               <table className="w-full text-right text-xs">
-                <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-100 dark:border-slate-800">
+                <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-100 dark:border-slate-800">
                   <tr>
                     <th className="py-2.5 px-4 text-center w-12 font-bold">n</th>
                     <th className="py-2.5 px-4 font-bold">
@@ -690,7 +692,7 @@ export const PracticalExample: React.FC<PracticalExampleProps> = ({
                       <MathInline math={`f(${curEx.varName}_n, y_n)`} />
                     </th>
                     <th className="py-2.5 px-4 font-bold">
-                      <MathInline math="y_{n+1} = y_n + h \\cdot f" />
+                      <MathInline math="y_{n+1} = y_n + h \\cdot f(x_n, y_n)" />
                     </th>
                   </tr>
                 </thead>
