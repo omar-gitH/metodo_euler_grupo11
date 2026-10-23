@@ -658,13 +658,13 @@ export const PracticalExample: React.FC<PracticalExampleProps> = ({
                         </span>
                         <MathInline math={`\\textcolor{#059669}{y_{${it.stepNum}}}`} />
                       </span>
-                      <span className="text-slate-400 text-xs font-medium">en</span>
-                      {/* Badge clarito para X */}
+                      <span className="text-slate-400 text-xs font-medium">desde</span>
+                      {/* Badge de X en el punto donde se evalúa la pendiente */}
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-sky-50 dark:bg-sky-950/50 text-sky-800 dark:text-sky-200 border border-sky-200/80 dark:border-sky-800/70 text-xs sm:text-sm font-semibold shadow-2xs">
                         <span className="text-[10px] uppercase font-bold text-sky-600 dark:text-sky-400">
-                          {it.targetVarName}_{it.stepNum} =
+                          {it.currentPoint.varName}_{it.stepNum - 1} =
                         </span>
-                        <MathInline math={`\\textcolor{#0284c7}{${it.targetVarVal}}`} />
+                        <MathInline math={`\\textcolor{#0284c7}{${it.currentPoint.varVal}}`} />
                       </span>
 
                       {it.isFinal && (
