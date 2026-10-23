@@ -732,13 +732,23 @@ export const PracticalExample: React.FC<PracticalExampleProps> = ({
           </div>
 
           {/* Tarjeta de Resultado y Comparación con Solución Exacta */}
-          <div className="p-4 sm:p-5 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed space-y-3">
-            <p>
-              <strong className="text-slate-900 dark:text-white">Resultado numérico:</strong>{' '}
-              <MathInline math={curEx.finalResultText} />.{' '}
-              <strong className="text-slate-900 dark:text-white">Comparación analítica:</strong>{' '}
-              <MathText text={curEx.comparisonText} />
-            </p>
+          <div className="p-4 sm:p-5 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 text-xs sm:text-sm text-slate-800 dark:text-slate-200 space-y-4">
+            <div className="space-y-2">
+              <strong className="block text-slate-900 dark:text-white">Resultado numérico</strong>
+              <div className="rounded-lg bg-white/80 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-700/60 px-3 py-2.5 text-sm sm:text-base">
+                <MathInline math={curEx.finalResultText} />
+              </div>
+            </div>
+            <div className="border-t border-slate-200/70 dark:border-slate-700/70 pt-4 space-y-2.5">
+              <strong className="block text-slate-900 dark:text-white">Comparación analítica</strong>
+              <div className="space-y-2 leading-7">
+                {curEx.comparisonText.split(/(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÜÑ])/).map((sentence, idx) => (
+                  <p key={idx} className="[overflow-wrap:anywhere]">
+                    <MathText text={sentence} />
+                  </p>
+                ))}
+              </div>
+            </div>
 
             {curEx.comparisonMetrics && curEx.comparisonMetrics.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">

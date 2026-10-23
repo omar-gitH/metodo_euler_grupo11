@@ -197,7 +197,7 @@ export default function App() {
               <div className="shrink-0 self-start lg:self-center">
                 <div className="inline-flex items-center gap-3 px-4 py-3 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200/90 dark:border-slate-700/80 shadow-2xs text-xs sm:text-sm">
                   <span className="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px]">
-                    Recurrencia
+                    Euler
                   </span>
                   <MathInline math="y_{n+1} = y_n + h \cdot f(x_n, y_n)" />
                 </div>

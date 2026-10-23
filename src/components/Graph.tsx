@@ -29,7 +29,6 @@ import {
   SkipBack,
   SkipForward,
   Sliders,
-  Wand2,
   Sparkles,
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
@@ -122,7 +121,6 @@ const GraphCanvas: React.FC<GraphProps> = ({
   const [showExact, setShowExact] = useState(true);
   const [showGrid, setShowGrid] = useState(true);
   const [showPoints, setShowPoints] = useState(true);
-  const [showSplineFit, setShowSplineFit] = useState(false);
   const [tool, setTool] = useState<Tool>('pan');
   const [fullscreen, setFullscreen] = useState(false);
   const [chartHeight, setChartHeight] = useState(420);
@@ -604,38 +602,11 @@ const GraphCanvas: React.FC<GraphProps> = ({
     return d;
   };
 
-  const toSplinePath = (pts: { x: number; y: number | null }[]) => {
-    const valid = pts.filter((p): p is { x: number; y: number } => p.y != null && isFinite(p.y));
-    if (valid.length < 2) return '';
-    if (valid.length === 2) {
-      return `M${sxOf(valid[0].x).toFixed(2)} ${safeY(valid[0].y).toFixed(2)}L${sxOf(valid[1].x).toFixed(2)} ${safeY(valid[1].y).toFixed(2)}`;
-    }
-    const sPts = valid.map((p) => ({ x: sxOf(p.x), y: safeY(p.y) }));
-    let d = `M${sPts[0].x.toFixed(2)} ${sPts[0].y.toFixed(2)}`;
-    for (let i = 0; i < sPts.length - 1; i++) {
-      const p0 = i > 0 ? sPts[i - 1] : sPts[i];
-      const p1 = sPts[i];
-      const p2 = sPts[i + 1];
-      const p3 = i < sPts.length - 2 ? sPts[i + 2] : p2;
-      const tension = 0.5;
-      const cp1x = p1.x + ((p2.x - p0.x) * tension) / 3;
-      const cp1y = p1.y + ((p2.y - p0.y) * tension) / 3;
-      const cp2x = p2.x - ((p3.x - p1.x) * tension) / 3;
-      const cp2y = p2.y - ((p3.y - p1.y) * tension) / 3;
-      d += ` C${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
-    }
-    return d;
-  };
 
   const mainPts = useMemo(
     () => activePoints.map((p) => ({ x: p.x, y: tab === 'solution' ? p.euler : p.err })),
     [activePoints, tab]
   );
-
-  const splinePath = useMemo(() => {
-    if (!showSplineFit || tab !== 'solution' || activePoints.length < 2) return '';
-    return toSplinePath(mainPts);
-  }, [showSplineFit, tab, activePoints, mainPts]);
 
   const exactPts = useMemo(() => {
     if (tab !== 'solution' || !hasExact || !showExact) return null;
@@ -921,22 +892,7 @@ const GraphCanvas: React.FC<GraphProps> = ({
 
 
 
-            {tab === 'solution' && (
-              <button
-                type="button"
-                onClick={() => setShowSplineFit((s) => !s)}
-                aria-pressed={showSplineFit}
-                className={`${chip} ${
-                  showSplineFit
-                    ? 'bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800/70 text-sky-700 dark:text-sky-300 font-bold shadow-2xs'
-                    : 'bg-transparent border-slate-200 dark:border-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
-                }`}
-                title="Curva continua suavizada (Spline) a través de los nodos de Euler"
-              >
-                <Wand2 className="w-3.5 h-3.5" />
-                Ajuste suave
-              </button>
-            )}
+
           </div>
 
           <div className="flex items-center gap-1 p-1 rounded-2xl bg-slate-100/80 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70">
@@ -1090,17 +1046,6 @@ const GraphCanvas: React.FC<GraphProps> = ({
                     stroke={C.exact}
                     strokeWidth={2.4}
                     strokeDasharray="7 5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                )}
-
-                {showSplineFit && tab === 'solution' && splinePath && (
-                  <path
-                    d={splinePath}
-                    fill="none"
-                    stroke={dark ? '#38bdf8' : '#0284c7'}
-                    strokeWidth={2.4}
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
