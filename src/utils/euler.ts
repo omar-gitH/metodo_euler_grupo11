@@ -205,9 +205,11 @@ export function computeEuler(params: {
   let currentX = x0;
   let currentY = y0;
   let n = 0;
+  const xTolerance =
+    Number.EPSILON * Math.max(1, Math.abs(x0), Math.abs(xf), Math.abs(h)) * (maxIterations + 1) * 8;
 
   // Use a shorter final step when h does not divide the interval exactly.
-  while (currentX < xf && n < maxIterations) {
+  while (xf - currentX > xTolerance && n < maxIterations) {
     const stepH = Math.min(h, xf - currentX);
     let slope: number;
     try {
@@ -276,10 +278,12 @@ export function computeEuler(params: {
       relErrorFormulaLatex,
     });
 
-    currentX = Number((currentX + stepH).toFixed(8));
+    currentX += stepH;
     currentY = nextY;
     n++;
   }
+
+  if (Math.abs(xf - currentX) <= xTolerance) currentX = xf;
 
   if (currentX < xf && n >= maxIterations) {
     return {

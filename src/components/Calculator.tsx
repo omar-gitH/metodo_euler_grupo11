@@ -206,7 +206,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValues }) => {
     if (span <= 1e-9) return;
 
     const rawH = span / newN;
-    const newH = Number(rawH.toFixed(6));
+    const newH = rawH;
     if (newH <= 0) return;
 
     setHInput(String(newH));

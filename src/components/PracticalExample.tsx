@@ -666,6 +666,7 @@ export const PracticalExample: React.FC<PracticalExampleProps> = ({
                         </span>
                         <MathInline math={`\\textcolor{#0284c7}{${it.targetVarVal}}`} />
                       </span>
+
                       {it.isFinal && (
                         <span className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-md border border-blue-200/60 dark:border-blue-800/60">
                           (respuesta final)
@@ -711,6 +712,7 @@ export const PracticalExample: React.FC<PracticalExampleProps> = ({
                       </div>
                     </div>
 
+
                     {/* Caja (b) Pendiente tangente: cálculo sustituido con variables coloreadas */}
                     <div className="border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 rounded-xl p-3 sm:p-3.5 space-y-2.5">
                       <div className="flex items-center justify-between">
@@ -722,6 +724,7 @@ export const PracticalExample: React.FC<PracticalExampleProps> = ({
                         </span>
                       </div>
                       <div className="font-mono text-xs sm:text-sm text-slate-800 dark:text-slate-100 overflow-x-auto no-scrollbar py-0.5">
+
                         <MathInline
                           math={`f = ${it.slope.substLatex} = \\mathbf{${it.slope.resultVal}}`}
                         />
@@ -769,7 +772,7 @@ export const PracticalExample: React.FC<PracticalExampleProps> = ({
 
             <div className="overflow-x-auto rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-2xs">
               <table className="w-full text-right text-xs">
-                <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-100 dark:border-slate-800">
+                <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-100 dark:border-slate-800">
                   <tr>
                     <th className="py-2.5 px-4 text-center w-12 font-bold">n</th>
                     <th className="py-2.5 px-4 font-bold text-sky-700 dark:text-sky-300 bg-sky-50/60 dark:bg-sky-950/30">
