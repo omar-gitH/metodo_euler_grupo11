@@ -28,7 +28,7 @@ export const MathView: React.FC<MathViewProps> = ({ math, block = false, classNa
   if (block) {
     return (
       <div
-        className={`math-block overflow-x-auto py-2 my-1 text-center font-serif text-gray-900 dark:text-slate-100 select-all tracking-normal ${className}`}
+        className={`math-block max-w-full overflow-x-hidden py-2 my-1 text-center font-serif text-gray-900 dark:text-slate-100 select-all tracking-normal ${className}`}
         dangerouslySetInnerHTML={{ __html: html }}
       />
     );

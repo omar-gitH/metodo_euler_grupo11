@@ -83,6 +83,12 @@ interface StepByStepExercise {
   };
 }
 
+// Helpers de colores claritos y de alto contraste para proyección en aula / proyector
+// Eje horizontal (independiente x o t): Celeste / Sky
+// Eje vertical (dependiente y): Verde Esmeralda / Mint
+const TEX_X = (val: string | number) => `\\textcolor{#0284c7}{${val}}`;
+const TEX_Y = (val: string | number) => `\\textcolor{#059669}{${val}}`;
+
 const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
   {
     id: 'ejercicio-1',
@@ -111,16 +117,16 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
         targetVarVal: '1.1',
         isFinal: false,
         explanation:
-          'Partimos de la condición inicial $(1, 1)$. Evaluamos la derivada: $1.0 \\cdot (1.0)^2 - \\frac{1.0}{1.0} = 1 - 1 = 0.0000$. La tangente inicial es horizontal y avanzamos $h = 0.1$.',
+          'Partimos de la condición inicial $(1, 1)$ donde $\\textcolor{#0284c7}{x_0 = 1.0}$ e $\\textcolor{#059669}{y_0 = 1.0000}$. Evaluamos la derivada: $\\textcolor{#0284c7}{1.0} \\cdot (\\textcolor{#059669}{1.0})^2 - \\frac{\\textcolor{#059669}{1.0}}{\\textcolor{#0284c7}{1.0}} = 1 - 1 = 0.0000$. La tangente inicial es horizontal y avanzamos $h = 0.1$.',
         currentPoint: { varName: 'x', varVal: '1.0', yVal: '1.0000' },
         slope: {
-          formulaLatex: 'f(x_0, y_0) = x_0 y_0^2 - \\frac{y_0}{x_0}',
-          substLatex: '1.0(1.0000^2) - \\frac{1.0000}{1.0}',
+          formulaLatex: `f(x_0, y_0) = ${TEX_X('x_0')} ${TEX_Y('y_0')}^2 - \\frac{${TEX_Y('y_0')}}{${TEX_X('x_0')}}`,
+          substLatex: `${TEX_X('1.0')}(${TEX_Y('1.0000')}^2) - \\frac{${TEX_Y('1.0000')}}{${TEX_X('1.0')}}`,
           resultVal: '0.0000',
         },
         advance: {
-          formulaLatex: 'y_1 = y_0 + h \\cdot f',
-          substLatex: '1.0000 + 0.1 \\cdot 0.0000',
+          formulaLatex: `${TEX_Y('y_1')} = ${TEX_Y('y_0')} + h \\cdot f`,
+          substLatex: `${TEX_Y('1.0000')} + 0.1 \\cdot 0.0000`,
           resultVal: '1.0000',
         },
       },
@@ -130,16 +136,16 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
         targetVarVal: '1.2',
         isFinal: false,
         explanation:
-          'El nuevo punto base es $(1.1, 1.0000)$. Calculamos la pendiente: $1.1 \\cdot (1.0)^2 - \\frac{1.0}{1.1} = 1.1 - 0.9091 = 0.1909$. Avanzamos el segundo paso.',
+          'El nuevo punto base es $(\\textcolor{#0284c7}{1.1}, \\textcolor{#059669}{1.0000})$. Calculamos la pendiente sustituyendo $\\textcolor{#0284c7}{x_1 = 1.1}$ e $\\textcolor{#059669}{y_1 = 1.0000}$: $\\textcolor{#0284c7}{1.1} \\cdot (\\textcolor{#059669}{1.0})^2 - \\frac{\\textcolor{#059669}{1.0}}{\\textcolor{#0284c7}{1.1}} = 1.1 - 0.9091 = 0.1909$. Avanzamos el segundo paso.',
         currentPoint: { varName: 'x', varVal: '1.1', yVal: '1.0000' },
         slope: {
-          formulaLatex: 'f(x_1, y_1) = x_1 y_1^2 - \\frac{y_1}{x_1}',
-          substLatex: '1.1(1.0000^2) - \\frac{1.0000}{1.1}',
+          formulaLatex: `f(x_1, y_1) = ${TEX_X('x_1')} ${TEX_Y('y_1')}^2 - \\frac{${TEX_Y('y_1')}}{${TEX_X('x_1')}}`,
+          substLatex: `${TEX_X('1.1')}(${TEX_Y('1.0000')}^2) - \\frac{${TEX_Y('1.0000')}}{${TEX_X('1.1')}}`,
           resultVal: '0.1909',
         },
         advance: {
-          formulaLatex: 'y_2 = y_1 + h \\cdot f',
-          substLatex: '1.0000 + 0.1 \\cdot 0.1909',
+          formulaLatex: `${TEX_Y('y_2')} = ${TEX_Y('y_1')} + h \\cdot f`,
+          substLatex: `${TEX_Y('1.0000')} + 0.1 \\cdot 0.1909`,
           resultVal: '1.0191',
         },
       },
@@ -149,16 +155,16 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
         targetVarVal: '1.3',
         isFinal: false,
         explanation:
-          'Punto base: $(1.2, 1.0191)$. Calculamos la pendiente: $1.2 \\cdot (1.0191)^2 - \\frac{1.0191}{1.2} = 1.2463 - 0.8492 = 0.3970$. Sumamos el avance vertical.',
+          'Punto base: $(\\textcolor{#0284c7}{1.2}, \\textcolor{#059669}{1.0191})$. Calculamos la pendiente: $\\textcolor{#0284c7}{1.2} \\cdot (\\textcolor{#059669}{1.0191})^2 - \\frac{\\textcolor{#059669}{1.0191}}{\\textcolor{#0284c7}{1.2}} = 1.2463 - 0.8492 = 0.3970$. Sumamos el avance vertical.',
         currentPoint: { varName: 'x', varVal: '1.2', yVal: '1.0191' },
         slope: {
-          formulaLatex: 'f(x_2, y_2) = x_2 y_2^2 - \\frac{y_2}{x_2}',
-          substLatex: '1.2(1.0191^2) - \\frac{1.0191}{1.2}',
+          formulaLatex: `f(x_2, y_2) = ${TEX_X('x_2')} ${TEX_Y('y_2')}^2 - \\frac{${TEX_Y('y_2')}}{${TEX_X('x_2')}}`,
+          substLatex: `${TEX_X('1.2')}(${TEX_Y('1.0191')}^2) - \\frac{${TEX_Y('1.0191')}}{${TEX_X('1.2')}}`,
           resultVal: '0.3970',
         },
         advance: {
-          formulaLatex: 'y_3 = y_2 + h \\cdot f',
-          substLatex: '1.0191 + 0.1 \\cdot 0.3970',
+          formulaLatex: `${TEX_Y('y_3')} = ${TEX_Y('y_2')} + h \\cdot f`,
+          substLatex: `${TEX_Y('1.0191')} + 0.1 \\cdot 0.3970`,
           resultVal: '1.0588',
         },
       },
@@ -168,16 +174,16 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
         targetVarVal: '1.4',
         isFinal: false,
         explanation:
-          'Punto base: $(1.3, 1.0588)$. Evaluamos la pendiente: $1.3 \\cdot (1.0588)^2 - \\frac{1.0588}{1.3} = 1.4574 - 0.8145 = 0.6429$. Avanzamos a $x = 1.4$.',
+          'Punto base: $(\\textcolor{#0284c7}{1.3}, \\textcolor{#059669}{1.0588})$. Evaluamos la pendiente con $\\textcolor{#0284c7}{x_3 = 1.3}$ e $\\textcolor{#059669}{y_3 = 1.0588}$: $\\textcolor{#0284c7}{1.3} \\cdot (\\textcolor{#059669}{1.0588})^2 - \\frac{\\textcolor{#059669}{1.0588}}{\\textcolor{#0284c7}{1.3}} = 1.4574 - 0.8145 = 0.6429$. Avanzamos a $x = 1.4$.',
         currentPoint: { varName: 'x', varVal: '1.3', yVal: '1.0588' },
         slope: {
-          formulaLatex: 'f(x_3, y_3) = x_3 y_3^2 - \\frac{y_3}{x_3}',
-          substLatex: '1.3(1.0588^2) - \\frac{1.0588}{1.3}',
+          formulaLatex: `f(x_3, y_3) = ${TEX_X('x_3')} ${TEX_Y('y_3')}^2 - \\frac{${TEX_Y('y_3')}}{${TEX_X('x_3')}}`,
+          substLatex: `${TEX_X('1.3')}(${TEX_Y('1.0588')}^2) - \\frac{${TEX_Y('1.0588')}}{${TEX_X('1.3')}}`,
           resultVal: '0.6429',
         },
         advance: {
-          formulaLatex: 'y_4 = y_3 + h \\cdot f',
-          substLatex: '1.0588 + 0.1 \\cdot 0.6429',
+          formulaLatex: `${TEX_Y('y_4')} = ${TEX_Y('y_3')} + h \\cdot f`,
+          substLatex: `${TEX_Y('1.0588')} + 0.1 \\cdot 0.6429`,
           resultVal: '1.1231',
         },
       },
@@ -187,16 +193,16 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
         targetVarVal: '1.5',
         isFinal: true,
         explanation:
-          'Último paso hasta $x = 1.5$. Evaluamos la pendiente final: $1.4 \\cdot (1.1231)^2 - \\frac{1.1231}{1.4} = 1.7658 - 0.8022 = 0.9636$. Obtenemos el resultado aproximado pedido.',
+          'Último paso hasta $x = 1.5$. Evaluamos la pendiente final: $\\textcolor{#0284c7}{1.4} \\cdot (\\textcolor{#059669}{1.1231})^2 - \\frac{\\textcolor{#059669}{1.1231}}{\\textcolor{#0284c7}{1.4}} = 1.7658 - 0.8022 = 0.9636$. Obtenemos el resultado aproximado pedido $\\textcolor{#059669}{y_5 \\approx 1.2194}$.',
         currentPoint: { varName: 'x', varVal: '1.4', yVal: '1.1231' },
         slope: {
-          formulaLatex: 'f(x_4, y_4) = x_4 y_4^2 - \\frac{y_4}{x_4}',
-          substLatex: '1.4(1.1231^2) - \\frac{1.1231}{1.4}',
+          formulaLatex: `f(x_4, y_4) = ${TEX_X('x_4')} ${TEX_Y('y_4')}^2 - \\frac{${TEX_Y('y_4')}}{${TEX_X('x_4')}}`,
+          substLatex: `${TEX_X('1.4')}(${TEX_Y('1.1231')}^2) - \\frac{${TEX_Y('1.1231')}}{${TEX_X('1.4')}}`,
           resultVal: '0.9636',
         },
         advance: {
-          formulaLatex: 'y_5 = y_4 + h \\cdot f',
-          substLatex: '1.1231 + 0.1 \\cdot 0.9636',
+          formulaLatex: `${TEX_Y('y_5')} = ${TEX_Y('y_4')} + h \\cdot f`,
+          substLatex: `${TEX_Y('1.1231')} + 0.1 \\cdot 0.9636`,
           resultVal: '1.2194',
         },
       },
@@ -256,16 +262,16 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
         targetVarVal: '0.5',
         isFinal: false,
         explanation:
-          'Partimos de la condición inicial $(t=0, y=0)$. Con la EDO calculamos la pendiente inicial: $\\operatorname{sen}(0) = 0$ y $e^0 = 1$, con lo cual la pendiente es $1.0000$. Avanzamos un paso grande $h = 0.5$.',
+          'Partimos de la condición inicial $(t=0, y=0)$ con $\\textcolor{#0284c7}{t_0 = 0.0}$ e $\\textcolor{#059669}{y_0 = 0.0000}$. Evaluamos la pendiente inicial con la EDO: $\\operatorname{sen}(\\textcolor{#0284c7}{0}) = 0$ y $e^{-\\textcolor{#0284c7}{0}} = 1$, con lo cual la pendiente es $1.0000$. Avanzamos un paso grande $h = 0.5$.',
         currentPoint: { varName: 't', varVal: '0.0', yVal: '0.0000' },
         slope: {
-          formulaLatex: 'f(t_0, y_0) = \\operatorname{sen}(t_0) + e^{-t_0}',
-          substLatex: '\\operatorname{sen}(0) + e^{-0} = 0 + 1',
+          formulaLatex: `f(t_0, y_0) = \\operatorname{sen}(${TEX_X('t_0')}) + e^{-${TEX_X('t_0')}}`,
+          substLatex: `\\operatorname{sen}(${TEX_X('0')}) + e^{-${TEX_X('0')}} = 0 + 1`,
           resultVal: '1.0000',
         },
         advance: {
-          formulaLatex: 'y_1 = y_0 + h \\cdot f',
-          substLatex: '0.0000 + 0.5 \\cdot 1.0000',
+          formulaLatex: `${TEX_Y('y_1')} = ${TEX_Y('y_0')} + h \\cdot f`,
+          substLatex: `${TEX_Y('0.0000')} + 0.5 \\cdot 1.0000`,
           resultVal: '0.5000',
         },
       },
@@ -275,16 +281,16 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
         targetVarVal: '1.0',
         isFinal: true,
         explanation:
-          'El punto de partida ahora es $(0.5, 0.5000)$. Calculamos la nueva pendiente evaluando $\\operatorname{sen}(0.5) \\approx 0.4794$ y $e^{-0.5} \\approx 0.6065$. Con su suma avanzamos el último salto de $h = 0.5$ hasta $t = 1.0$.',
+          'El punto de partida ahora es $(\\textcolor{#0284c7}{0.5}, \\textcolor{#059669}{0.5000})$. Calculamos la nueva pendiente evaluando $\\operatorname{sen}(\\textcolor{#0284c7}{0.5}) \\approx 0.4794$ y $e^{-\\textcolor{#0284c7}{0.5}} \\approx 0.6065$. Con su suma avanzamos el último salto de $h = 0.5$ hasta alcanzar $\\textcolor{#059669}{y_2 \\approx 1.0430}$ en $\\textcolor{#0284c7}{t = 1.0}$.',
         currentPoint: { varName: 't', varVal: '0.5', yVal: '0.5000' },
         slope: {
-          formulaLatex: 'f(t_1, y_1) = \\operatorname{sen}(t_1) + e^{-t_1}',
-          substLatex: '\\operatorname{sen}(0.5) + e^{-0.5} = 0.4794 + 0.6065',
+          formulaLatex: `f(t_1, y_1) = \\operatorname{sen}(${TEX_X('t_1')}) + e^{-${TEX_X('t_1')}}`,
+          substLatex: `\\operatorname{sen}(${TEX_X('0.5')}) + e^{-${TEX_X('0.5')}} = 0.4794 + 0.6065`,
           resultVal: '1.0860',
         },
         advance: {
-          formulaLatex: 'y_2 = y_1 + h \\cdot f',
-          substLatex: '0.5000 + 0.5 \\cdot 1.0860',
+          formulaLatex: `${TEX_Y('y_2')} = ${TEX_Y('y_1')} + h \\cdot f`,
+          substLatex: `${TEX_Y('0.5000')} + 0.5 \\cdot 1.0860`,
           resultVal: '1.0430',
         },
       },
@@ -341,16 +347,16 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
         targetVarVal: '2.25',
         isFinal: false,
         explanation:
-          'Partimos de la condición inicial $(x=2, y=0.5)$. Evaluamos la resta al cuadrado en la derivada: $(2 - 0.5)^2 = 1.5^2 = 2.2500$. Multiplicamos por $h = 0.25$ para obtener el avance vertical.',
+          'Partimos de la condición inicial $(x=2, y=0.5)$ con $\\textcolor{#0284c7}{x_0 = 2.00}$ e $\\textcolor{#059669}{y_0 = 0.5000}$. Evaluamos la resta al cuadrado en la derivada: $(\\textcolor{#0284c7}{2.0} - \\textcolor{#059669}{0.5})^2 = 1.5^2 = 2.2500$. Multiplicamos por $h = 0.25$ para obtener el avance vertical.',
         currentPoint: { varName: 'x', varVal: '2.00', yVal: '0.5000' },
         slope: {
-          formulaLatex: 'f(x_0, y_0) = (x_0 - y_0)^2',
-          substLatex: '(2.0 - 0.5000)^2 = (1.5000)^2',
+          formulaLatex: `f(x_0, y_0) = (${TEX_X('x_0')} - ${TEX_Y('y_0')})^2`,
+          substLatex: `(${TEX_X('2.0')} - ${TEX_Y('0.5000')})^2 = (1.5000)^2`,
           resultVal: '2.2500',
         },
         advance: {
-          formulaLatex: 'y_1 = y_0 + h \\cdot f',
-          substLatex: '0.5000 + 0.25 \\cdot 2.2500',
+          formulaLatex: `${TEX_Y('y_1')} = ${TEX_Y('y_0')} + h \\cdot f`,
+          substLatex: `${TEX_Y('0.5000')} + 0.25 \\cdot 2.2500`,
           resultVal: '1.0625',
         },
       },
@@ -360,16 +366,16 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
         targetVarVal: '2.50',
         isFinal: false,
         explanation:
-          'Nuevo punto base: $(2.25, 1.0625)$. La nueva pendiente es $(2.25 - 1.0625)^2 = 1.1875^2 \\approx 1.4102$. Avanzamos el segundo cuarto de paso.',
+          'Nuevo punto base: $(\\textcolor{#0284c7}{2.25}, \\textcolor{#059669}{1.0625})$. Sustituyendo $\\textcolor{#0284c7}{x_1 = 2.25}$ e $\\textcolor{#059669}{y_1 = 1.0625}$, la nueva pendiente es $(\\textcolor{#0284c7}{2.25} - \\textcolor{#059669}{1.0625})^2 = 1.1875^2 \\approx 1.4102$. Avanzamos el segundo cuarto de paso.',
         currentPoint: { varName: 'x', varVal: '2.25', yVal: '1.0625' },
         slope: {
-          formulaLatex: 'f(x_1, y_1) = (x_1 - y_1)^2',
-          substLatex: '(2.25 - 1.0625)^2 = (1.1875)^2',
+          formulaLatex: `f(x_1, y_1) = (${TEX_X('x_1')} - ${TEX_Y('y_1')})^2`,
+          substLatex: `(${TEX_X('2.25')} - ${TEX_Y('1.0625')})^2 = (1.1875)^2`,
           resultVal: '1.4102',
         },
         advance: {
-          formulaLatex: 'y_2 = y_1 + h \\cdot f',
-          substLatex: '1.0625 + 0.25 \\cdot 1.4102',
+          formulaLatex: `${TEX_Y('y_2')} = ${TEX_Y('y_1')} + h \\cdot f`,
+          substLatex: `${TEX_Y('1.0625')} + 0.25 \\cdot 1.4102`,
           resultVal: '1.4151',
         },
       },
@@ -379,16 +385,16 @@ const STEP_BY_STEP_EXERCISES: StepByStepExercise[] = [
         targetVarVal: '2.75',
         isFinal: true,
         explanation:
-          'Último paso hasta $x = 2.75$. Calculamos la pendiente final con el punto anterior: $(2.50 - 1.4151)^2 = 1.0849^2 \\approx 1.1770$ y calculamos la aproximación pedida.',
+          'Último paso hasta $\\textcolor{#0284c7}{x = 2.75}$. Calculamos la pendiente final con el punto anterior $(\\textcolor{#0284c7}{2.50}, \\textcolor{#059669}{1.4151})$: $(\\textcolor{#0284c7}{2.50} - \\textcolor{#059669}{1.4151})^2 = 1.0849^2 \\approx 1.1770$ y sumamos para obtener el resultado aproximado final $\\textcolor{#059669}{y_3 \\approx 1.7094}$.',
         currentPoint: { varName: 'x', varVal: '2.50', yVal: '1.4151' },
         slope: {
-          formulaLatex: 'f(x_2, y_2) = (x_2 - y_2)^2',
-          substLatex: '(2.50 - 1.4151)^2 = (1.0849)^2',
+          formulaLatex: `f(x_2, y_2) = (${TEX_X('x_2')} - ${TEX_Y('y_2')})^2`,
+          substLatex: `(${TEX_X('2.50')} - ${TEX_Y('1.4151')})^2 = (1.0849)^2`,
           resultVal: '1.1770',
         },
         advance: {
-          formulaLatex: 'y_3 = y_2 + h \\cdot f',
-          substLatex: '1.4151 + 0.25 \\cdot 1.1770',
+          formulaLatex: `${TEX_Y('y_3')} = ${TEX_Y('y_2')} + h \\cdot f`,
+          substLatex: `${TEX_Y('1.4151')} + 0.25 \\cdot 1.1770`,
           resultVal: '1.7094',
         },
       },
@@ -550,24 +556,32 @@ export const PracticalExample: React.FC<PracticalExampleProps> = ({
             </div>
           )}
 
-          {/* Plan de Resolución (Lista estructurada con tipografía limpia) */}
+          {/* Plan de Resolución (Lista estructurada con tipografía limpia y variables claritas) */}
           <div className="space-y-3 pt-1">
             <h4 className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">
               Plan de resolución
             </h4>
 
-            <ol className="list-decimal list-inside space-y-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed pl-1">
+            <ol className="list-decimal list-inside space-y-2.5 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed pl-1">
               <li>
                 <strong>Identificar los datos:</strong>{' '}
                 <MathInline math={`f(${curEx.varName}, y) = ${curEx.edoFormulaRight}`} />
                 {', '}
-                <MathInline math={`${curEx.varName}_0 = ${curEx.x0Val}`} />
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-sky-50 dark:bg-sky-950/50 text-sky-800 dark:text-sky-200 border border-sky-200/80 dark:border-sky-800/70 font-semibold text-xs">
+                  <MathInline math={`\\textcolor{#0284c7}{${curEx.varName}_0 = ${curEx.x0Val}}`} />
+                </span>
                 {', '}
-                <MathInline math={`y_0 = ${curEx.y0Val}`} />
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 border border-emerald-200/80 dark:border-emerald-800/70 font-semibold text-xs">
+                  <MathInline math={`\\textcolor{#059669}{y_0 = ${curEx.y0Val}}`} />
+                </span>
                 {', '}
-                <MathInline math={`h = ${curEx.hDisplay}`} />
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-semibold text-xs">
+                  <MathInline math={`h = ${curEx.hDisplay}`} />
+                </span>
                 {' y '}
-                <MathInline math={`${curEx.varName}_f = ${curEx.xfVal}`} />.
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-sky-50 dark:bg-sky-950/50 text-sky-800 dark:text-sky-200 border border-sky-200/80 dark:border-sky-800/70 font-semibold text-xs">
+                  <MathInline math={`\\textcolor{#0284c7}{${curEx.varName}_f = ${curEx.xfVal}}`} />
+                </span>.
               </li>
               <li>
                 <strong>Calcular las iteraciones:</strong>{' '}
@@ -575,26 +589,55 @@ export const PracticalExample: React.FC<PracticalExampleProps> = ({
                   math={`n = \\frac{${curEx.xfVal} - ${curEx.x0Val}}{${curEx.hDisplay}} = ${curEx.numIterations}`}
                 />
                 {', o sea que se llega a '}
-                <MathInline math={`${curEx.varName} = ${curEx.xfVal}`} />
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-sky-50 dark:bg-sky-950/50 text-sky-800 dark:text-sky-200 border border-sky-200/80 dark:border-sky-800/70 font-semibold text-xs">
+                  <MathInline math={`\\textcolor{#0284c7}{${curEx.varName} = ${curEx.xfVal}}`} />
+                </span>
                 {` en ${curEx.numIterations} pasos.`}
               </li>
               <li>
                 <strong>Repetir en cada iteración tres cosas:</strong>{' '}
-                (a) tomar el punto actual <MathInline math={`(${curEx.varName}_n, y_n)`} />,{' '}
+                (a) tomar el punto base{' '}
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700 font-semibold text-xs">
+                  <MathInline math={`(\\textcolor{#0284c7}{${curEx.varName}_n}, \\; \\textcolor{#059669}{y_n})`} />
+                </span>,{' '}
                 (b) calcular la pendiente con <MathInline math="f" /> (<MathText text={curEx.slopeActionDescription} />),{' '}
-                (c) avanzar con <MathInline math="y_{n+1} = y_n + h \\cdot f" />.
+                (c) avanzar verticalmente con{' '}
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 border border-emerald-200/80 dark:border-emerald-800/70 font-semibold text-xs">
+                  <MathInline math={`\\textcolor{#059669}{y_{n+1}} = \\textcolor{#059669}{y_n} + h \\cdot f`} />
+                </span>.
               </li>
               <li>
-                <strong>Leer el resultado:</strong> el valor de <MathInline math="y" /> obtenido en la última iteración es la aproximación numérica buscada de <MathInline math={curEx.targetLatex} />.
+                <strong>Leer el resultado:</strong> el valor de{' '}
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 border border-emerald-200/80 dark:border-emerald-800/70 font-semibold text-xs">
+                  <MathInline math={`\\textcolor{#059669}{y}`} />
+                </span>{' '}
+                obtenido en la última iteración es la aproximación numérica buscada de <MathInline math={curEx.targetLatex} />.
               </li>
             </ol>
           </div>
 
-          {/* Sección Desarrollo: Grilla de los 3 subpasos en cada iteración */}
+          {/* Sección Desarrollo: Grilla de los 3 subpasos en cada iteración con resalte clarito para proyector */}
           <div className="space-y-4 pt-2">
-            <h4 className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">
-              Desarrollo de cálculo
-            </h4>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <h4 className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">
+                Desarrollo de cálculo
+              </h4>
+
+              {/* Guía visual clarita para proyección */}
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-1">
+                  Resalte en proyector:
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-50 dark:bg-sky-950/50 text-sky-800 dark:text-sky-200 border border-sky-200/80 dark:border-sky-800/70 shadow-2xs">
+                  <span className="w-2 h-2 rounded-full bg-sky-500 shrink-0" />
+                  <span>Variable <strong>{curEx.varName}</strong> (horizontal)</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 border border-emerald-200/80 dark:border-emerald-800/70 shadow-2xs">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                  <span>Variable <strong>y</strong> (vertical)</span>
+                </span>
+              </div>
+            </div>
 
             <div className="space-y-4">
               {curEx.iterations.map((it) => (
@@ -602,20 +645,34 @@ export const PracticalExample: React.FC<PracticalExampleProps> = ({
                   key={it.stepNum}
                   className="p-4 sm:p-5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-2xs space-y-3"
                 >
-                  {/* Encabezado del paso */}
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-2">
-                    <span className="font-bold text-slate-900 dark:text-white text-sm">
-                      Iteración {it.stepNum}: avanzar desde{' '}
-                      <MathInline math={`${it.targetVarName}_${it.stepNum - 1} = ${it.currentPoint.varVal}`} />{' '}
-                      hasta{' '}
-                      <MathInline math={`y_${it.stepNum}`} /> en{' '}
-                      <MathInline math={`${it.targetVarName}_${it.stepNum} = ${it.targetVarVal}`} />
+                  {/* Encabezado del paso con badges claritos de X e Y */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-2.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">
+                        Iteración {it.stepNum}:
+                      </span>
+                      {/* Badge clarito para Y */}
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 border border-emerald-200/80 dark:border-emerald-800/70 text-xs sm:text-sm font-semibold shadow-2xs">
+                        <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400">
+                          Calcular
+                        </span>
+                        <MathInline math={`\\textcolor{#059669}{y_{${it.stepNum}}}`} />
+                      </span>
+                      <span className="text-slate-400 text-xs font-medium">en</span>
+                      {/* Badge clarito para X */}
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-sky-50 dark:bg-sky-950/50 text-sky-800 dark:text-sky-200 border border-sky-200/80 dark:border-sky-800/70 text-xs sm:text-sm font-semibold shadow-2xs">
+                        <span className="text-[10px] uppercase font-bold text-sky-600 dark:text-sky-400">
+                          {it.targetVarName}_{it.stepNum} =
+                        </span>
+                        <MathInline math={`\\textcolor{#0284c7}{${it.targetVarVal}}`} />
+                      </span>
+
                       {it.isFinal && (
-                        <span className="ml-2 text-xs font-bold text-blue-600 dark:text-blue-400">
+                        <span className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-md border border-blue-200/60 dark:border-blue-800/60">
                           (respuesta final)
                         </span>
                       )}
-                    </span>
+                    </div>
                   </div>
 
                   {/* Explicación en texto */}
@@ -625,39 +682,75 @@ export const PracticalExample: React.FC<PracticalExampleProps> = ({
 
                   {/* Grilla responsiva de 3 cajas: (a) Punto actual, (b) Pendiente, (c) Avance */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
-                    {/* Caja (a) Punto actual */}
-                    <div className="border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 rounded-xl p-3 space-y-1">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
-                        (a) Punto actual
-                      </span>
-                      <div className="font-mono text-xs sm:text-sm text-slate-800 dark:text-slate-100">
+                    {/* Caja (a) Punto actual base: contorno celeste tenue con chips claritos para X e Y */}
+                    <div className="border border-sky-200/90 dark:border-sky-800/80 bg-sky-50/80 dark:bg-sky-950/35 rounded-xl p-3 sm:p-3.5 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-sky-800 dark:text-sky-300 block">
+                          (a) Punto actual base
+                        </span>
+                        <span className="text-[10px] font-mono text-sky-700/80 dark:text-sky-400/80 font-medium">
+                          ({it.currentPoint.varName}_{it.stepNum - 1}, y_{it.stepNum - 1})
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {/* Chip X clarito */}
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-sky-200 dark:border-sky-800 text-sky-900 dark:text-sky-100 font-mono text-xs sm:text-sm font-bold shadow-2xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-sky-500 shrink-0" />
+                          <span className="text-[10px] uppercase font-bold text-sky-600 dark:text-sky-400">Eje {it.currentPoint.varName.toUpperCase()}:</span>
+                          <MathInline
+                            math={`\\textcolor{#0284c7}{${it.currentPoint.varName}_{${it.stepNum - 1}} = ${it.currentPoint.varVal}}`}
+                          />
+                        </div>
+                        {/* Chip Y clarito */}
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-100 font-mono text-xs sm:text-sm font-bold shadow-2xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                          <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400">Eje Y:</span>
+                          <MathInline
+                            math={`\\textcolor{#059669}{y_{${it.stepNum - 1}} = ${it.currentPoint.yVal}}`}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+
+                    {/* Caja (b) Pendiente tangente: cálculo sustituido con variables coloreadas */}
+                    <div className="border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 rounded-xl p-3 sm:p-3.5 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 block">
+                          (b) Pendiente tangente
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-400">
+                          f({it.currentPoint.varName}, y)
+                        </span>
+                      </div>
+                      <div className="font-mono text-xs sm:text-sm text-slate-800 dark:text-slate-100 overflow-x-auto no-scrollbar py-0.5">
+
                         <MathInline
-                          math={`${it.currentPoint.varName}_{${it.stepNum - 1}} = ${it.currentPoint.varVal}, \\; y_{${it.stepNum - 1}} = ${it.currentPoint.yVal}`}
+                          math={`f = ${it.slope.substLatex} = \\mathbf{${it.slope.resultVal}}`}
                         />
                       </div>
                     </div>
 
-                    {/* Caja (b) Pendiente */}
-                    <div className="border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 rounded-xl p-3 space-y-1">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
-                        (b) Pendiente en el punto actual
-                      </span>
-                      <div className="font-mono text-xs sm:text-sm text-slate-800 dark:text-slate-100">
-                        <MathInline
-                          math={`f = ${it.slope.substLatex} = ${it.slope.resultVal}`}
-                        />
+                    {/* Caja (c) Avance: contorno esmeralda tenue con chip clarito y KaTeX corregido */}
+                    <div className="border border-emerald-200/90 dark:border-emerald-800/80 bg-emerald-50/80 dark:bg-emerald-950/35 rounded-xl p-3 sm:p-3.5 space-y-2.5 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300 block">
+                          (c) Avance de ordenada (Y)
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
+                          Nuevo punto
+                        </span>
                       </div>
-                    </div>
-
-                    {/* Caja (c) Avance */}
-                    <div className="border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 rounded-xl p-3 space-y-1">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
-                        (c) Avance
-                      </span>
-                      <div className="font-mono text-xs sm:text-sm font-bold text-blue-900 dark:text-blue-200">
-                        <MathInline
-                          math={`y_${it.stepNum} = ${it.advance.substLatex} = ${it.advance.resultVal}`}
-                        />
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-100 font-mono text-xs sm:text-sm font-bold shadow-2xs overflow-x-auto no-scrollbar max-w-full">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                          <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
+                            Nuevo Y:
+                          </span>
+                          <MathInline
+                            math={`\\textcolor{#059669}{y_{${it.stepNum}}} = ${it.advance.substLatex} = \\textcolor{#059669}{\\mathbf{${it.advance.resultVal}}}`}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -682,17 +775,17 @@ export const PracticalExample: React.FC<PracticalExampleProps> = ({
                 <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-100 dark:border-slate-800">
                   <tr>
                     <th className="py-2.5 px-4 text-center w-12 font-bold">n</th>
-                    <th className="py-2.5 px-4 font-bold">
-                      <MathInline math={`${curEx.varName}_n`} />
+                    <th className="py-2.5 px-4 font-bold text-sky-700 dark:text-sky-300 bg-sky-50/60 dark:bg-sky-950/30">
+                      <MathInline math={`\\textcolor{#0284c7}{${curEx.varName}_n}`} />
                     </th>
-                    <th className="py-2.5 px-4 font-bold">
-                      <MathInline math="y_n" />
+                    <th className="py-2.5 px-4 font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/30">
+                      <MathInline math={`\\textcolor{#059669}{y_n}`} />
                     </th>
                     <th className="py-2.5 px-4 font-bold">
                       <MathInline math={`f(${curEx.varName}_n, y_n)`} />
                     </th>
-                    <th className="py-2.5 px-4 font-bold">
-                      <MathInline math="y_{n+1} = y_n + h \\cdot f(x_n, y_n)" />
+                    <th className="py-2.5 px-4 font-bold text-emerald-800 dark:text-emerald-200 bg-emerald-50/40 dark:bg-emerald-950/20">
+                      <MathInline math={`\\textcolor{#059669}{y_{n+1}} = \\textcolor{#059669}{y_n} + h \\cdot f`} />
                     </th>
                   </tr>
                 </thead>
@@ -709,19 +802,19 @@ export const PracticalExample: React.FC<PracticalExampleProps> = ({
                       <td className="py-2.5 px-4 text-center font-mono text-slate-500 dark:text-slate-400">
                         {row.n}
                       </td>
-                      <td className="py-2.5 px-4 font-mono font-bold text-slate-900 dark:text-white">
+                      <td className="py-2.5 px-4 font-mono font-bold text-sky-800 dark:text-sky-200 bg-sky-50/30 dark:bg-sky-950/20">
                         {row.xn}
                       </td>
-                      <td className="py-2.5 px-4 font-mono font-semibold text-slate-800 dark:text-slate-200">
+                      <td className="py-2.5 px-4 font-mono font-semibold text-emerald-800 dark:text-emerald-200 bg-emerald-50/30 dark:bg-emerald-950/20">
                         {row.yn}
                       </td>
                       <td className="py-2.5 px-4 font-mono text-slate-600 dark:text-slate-400">
                         {row.slope}
                       </td>
-                      <td className="py-2.5 px-4 font-mono font-bold">
+                      <td className="py-2.5 px-4 font-mono font-bold text-emerald-900 dark:text-emerald-200">
                         {row.nextY}
                         {row.note && (
-                          <span className="ml-2 text-[10px] font-sans font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                          <span className="ml-2 text-[10px] font-sans font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200">
                             {row.note}
                           </span>
                         )}
@@ -734,13 +827,23 @@ export const PracticalExample: React.FC<PracticalExampleProps> = ({
           </div>
 
           {/* Tarjeta de Resultado y Comparación con Solución Exacta */}
-          <div className="p-4 sm:p-5 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed space-y-3">
-            <p>
-              <strong className="text-slate-900 dark:text-white">Resultado numérico:</strong>{' '}
-              <MathInline math={curEx.finalResultText} />.{' '}
-              <strong className="text-slate-900 dark:text-white">Comparación analítica:</strong>{' '}
-              <MathText text={curEx.comparisonText} />
-            </p>
+          <div className="p-4 sm:p-5 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 text-xs sm:text-sm text-slate-800 dark:text-slate-200 space-y-4">
+            <div className="space-y-2">
+              <strong className="block text-slate-900 dark:text-white">Resultado numérico aproximado</strong>
+              <div className="rounded-lg bg-emerald-50/80 dark:bg-emerald-950/50 border border-emerald-200/80 dark:border-emerald-800/70 px-4 py-3 text-sm sm:text-base font-bold text-emerald-950 dark:text-emerald-100 shadow-2xs">
+                <MathInline math={`\\textcolor{#059669}{${curEx.finalResultText}}`} />
+              </div>
+            </div>
+            <div className="border-t border-slate-200/70 dark:border-slate-700/70 pt-4 space-y-2.5">
+              <strong className="block text-slate-900 dark:text-white">Comparación analítica</strong>
+              <div className="space-y-2 leading-7">
+                {curEx.comparisonText.split(/(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÜÑ])/).map((sentence, idx) => (
+                  <p key={idx} className="[overflow-wrap:anywhere]">
+                    <MathText text={sentence} />
+                  </p>
+                ))}
+              </div>
+            </div>
 
             {curEx.comparisonMetrics && curEx.comparisonMetrics.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">

@@ -3,7 +3,6 @@ import { MathBlock, MathInline } from './MathView';
 import { EulerStepDiagram } from './EulerStepDiagram';
 import {
   BookOpen,
-  ArrowRight,
   ChevronDown,
   Scissors,
   AlertTriangle,
@@ -15,7 +14,7 @@ interface TheoryProps {
   onGoToExample?: () => void;
 }
 
-export const Theory: React.FC<TheoryProps> = ({ onGoToExample }) => {
+export const Theory: React.FC<TheoryProps> = () => {
   const [isErrorAccordionOpen, setIsErrorAccordionOpen] = useState<boolean>(true);
 
   return (
@@ -258,17 +257,6 @@ export const Theory: React.FC<TheoryProps> = ({ onGoToExample }) => {
         )}
       </div>
 
-      {onGoToExample && (
-        <div className="flex justify-end">
-          <button
-            onClick={onGoToExample}
-            className="btn-soft !text-xs font-semibold cursor-pointer"
-          >
-            <span>Continuar al ejemplo paso a paso</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
     </section>
   );
 };
